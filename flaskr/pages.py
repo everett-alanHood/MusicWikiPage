@@ -9,6 +9,7 @@ def make_endpoints(app):
     def home():
         # TODO(Checkpoint Requirement 2 of 3): Change this to use render_template
         # to render main.html on the home page.
-        return "Hello, World!\n"
+        return render_template("main.html")
+        # return "Hello, World!\n"
 
     # TODO(Project 1): Implement additional routes according to the project requirements.

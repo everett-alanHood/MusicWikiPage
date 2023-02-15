@@ -1,5 +1,4 @@
 from flaskr import create_app
-
 import pytest
 
 # See https://flask.palletsprojects.com/en/2.2.x/testing/ 
