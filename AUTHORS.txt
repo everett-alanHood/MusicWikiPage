@@ -1,2 +1,3 @@
 TODO(Checkpoint Requirement 1 of 3): Add team member names and emails.
-Joseph Salazar jspenny@techexchange.in
+Joseph Salazar <jspenny@techexchange.in>
+Sandy Marrero Hernández <sandy-marrero@techexchange.in>
