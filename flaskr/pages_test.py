@@ -1,6 +1,7 @@
 from flaskr import create_app
 import pytest
 
+
 # See https://flask.palletsprojects.com/en/2.2.x/testing/ 
 # for more info on testing
 @pytest.fixture
@@ -19,6 +20,6 @@ def client(app):
 def test_home_page(client):
     resp = client.get("/")
     assert resp.status_code == 200
-    assert b"Hello, World!\n" in resp.data
+    assert b"Music Theory Wiki" in resp.data
 
 # TODO(Project 1): Write tests for other routes.
