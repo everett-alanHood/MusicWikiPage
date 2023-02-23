@@ -29,4 +29,7 @@ def create_app(test_config=None):
     # TODO(Project 1): Make additional modifications here for logging in, backends
     # and additional endpoints.
     pages.make_endpoints(app)
+
+    # """For login and sign up in backend.py"""
+    # app.secret_key = 'temp_key'
     return app
