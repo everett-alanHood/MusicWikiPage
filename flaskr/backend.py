@@ -6,10 +6,15 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
     def __init__(self):
+        #Used for logging in/out
         self.app = Flask(__name__) # create_app()
         self.app.secret_key = 'test_key'
         self.login_manager = LoginManager()
         self.login_manager.init_app(self.app)
+        #Buckets
+        storage_client = storage.Client()
+        self.bucket_content = storage_client.bucket('minorbugs_content')
+        self.bucket_users = storage_client.bucket('minorbugs_users')
 
         raise NotImplementedError
     
@@ -26,7 +31,8 @@ class Backend:
         raise NotImplementedError
 
     def sign_in(self, user_check):
-
+        #Check if user exists in the cloud
+        
         raise NotImplementedError
 
     def get_image(self):
