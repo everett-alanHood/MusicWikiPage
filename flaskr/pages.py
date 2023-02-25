@@ -63,6 +63,12 @@ def make_endpoints(app):
         logout_user()
         return render_template('/')
 
-    @app.route('/signup')
+    @app.route('/signup', methods=['GET', 'POST'])
     def sign_up():
+        new_user = {
+            'username' : request.form.get('username'),
+            'password' : request.form.get('password')
+        }
+        if new_user['username'] == "" or new_user['password'] == "":
+            return
         return render_template('signup.html')
