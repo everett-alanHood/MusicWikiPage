@@ -41,13 +41,8 @@ def make_endpoints(app):
         be = backend.Backend()
         valid_user = be.sign_in(user)
         if valid_user:
-<<<<<<< HEAD
-            #Display Name, Upload and Logout option now. (No longer able to access singup.html & login.html)
-            return render_template('welcome.html')
-=======
             #Display user Name, allow user to access Uploads page and Logout option. (No longer able to access singup.html & login.html)
             raise NotImplementedError
->>>>>>> 240e17181b384f9ff802faf4c1759b5ac3e51e2f
         
         return render_template('login.html', error='Incorret Username and/or Password')
 
