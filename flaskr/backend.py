@@ -1,22 +1,20 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-# from flaskr.__init__ import create_app
+from bcrypt import encode, gensalt, hashpw, checkpw
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
-    def __init__(self):
+    
+    def __init__(self, app):
         #Used for logging in/out
-        self.app = Flask(__name__) # create_app()
-        self.app.secret_key = 'test_key'
+        self.app = app
         self.login_manager = LoginManager()
         self.login_manager.init_app(self.app)
         #Buckets
         storage_client = storage.Client()
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
-
-        raise NotImplementedError
     
     def get_wiki_page(self, name):
         raise NotImplementedError
@@ -31,26 +29,44 @@ class Backend:
         raise NotImplementedError
 
     def sign_in(self, user_check):
-        #Check if user exists in the cloud
+        user_name = user_check['username']
+        user_blob = self.bucket_content.blob(f"{user_name}.txt")
+
+        if not user_blob.exists():
+            return (False,)
         
-        raise NotImplementedError
+        user_pass = user_check['password']
+        
+        content = user_blob.download_as_string().split('\n')
+        name = content[0]
+        hash_pass = content[1]
+
+        if not checkpw(user_pass, hash_pass):
+            return (False,)
+
+        return (True, f'{user_name}', name)
 
     def get_image(self):
         raise NotImplementedError
 
 
 """
-    Creates client
-    storage_client = storage.Client()
 
-    Names for buckets
-    content_name = 'minorbugs_content'
-    users_name = 'minorbugs_users'
+    user_name = user_info['username']
+    user_blob = self.bucket_content.blob(f"{user_name}.txt' ")
 
-    Gets buckets
-    bucket_content = storage_client.get_bucket(content_name)
-    bucket_users = storage_client.get_bucket(users_name)
+    if user_blob.exists():
+        return (False,)
 
+    name = user_info['name']
+    user_pass = user_info['username']
+
+    encoded = user_pass.encode()
+    salt = gensalt()
+    hash_pass = hashpw(encoded, salt)
+
+    user_blob.upload_from_string(f"{name}\n{hash_pass}")
+    return (True, user_name)
 
     def write(self, bucket_name, blob_name, content):
             storage_client = storage.Client()
