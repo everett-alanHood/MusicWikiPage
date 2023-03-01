@@ -5,7 +5,8 @@
     </head>
     <body>
         <div>
-            <d1>Signup</d1>
+            {% include 'header.html' %}
+            <h1>Sign Up</h1>
             <form method="post" action="/main">
                 <input type="text" name="Username" placeholder="Username" required="required"/>
                 <input type="text" name="Password" placeholder="Password" required="required"/>
