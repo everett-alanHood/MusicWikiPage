@@ -107,6 +107,6 @@ def make_endpoints(app):
             'username' : request.form.get('Username'),
             'password' : request.form.get('Password')
         }
-        be = backend.Backend()
+        be = backend.Backend(app)
         be.sign_up(new_user)
         return render_template('welcome.html')

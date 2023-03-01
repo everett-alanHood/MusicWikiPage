@@ -1,8 +1,7 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-from bcrypt import encode, gensalt, hashpw, checkpw
-
+import bcrypt
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
     
@@ -26,7 +25,11 @@ class Backend:
         raise NotImplementedError
     
     def sign_up(self, user_info):
-        raise NotImplementedError
+        user_name = user_info['username']
+        user_blob = self.bucket_content.blob(f"{user_name}.txt")
+        bytes = user_info['password'].encode('utf-8')
+        salt = bcrypt.gensalt()
+        hash = bcrypt.hashpw(bytes, salt)
 
     def sign_in(self, user_check):
         user_name = user_check['username']
@@ -41,7 +44,7 @@ class Backend:
         name = content[0]
         hash_pass = content[1]
 
-        if not checkpw(user_pass, hash_pass):
+        if not bcrypt.checkpw(user_pass, hash_pass):
             return (False,)
 
         return (True, f'{user_name}', name)
