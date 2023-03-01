@@ -109,6 +109,5 @@ def make_endpoints(app):
         }
 
         if new_user['username'] == "" or new_user['password'] == "":
-            return
-
-        return render_template('signup.html')
+            return redirect("/")
+        return render_template('welcome.html')
