@@ -26,7 +26,11 @@ class Backend:
         raise NotImplementedError
     
     def sign_up(self, user_info):
-        raise NotImplementedError
+        user_name = user_info['username']
+        user_blob = self.bucket_content.blob(f"{user_name}.txt")
+        bytes = user_info['password'].encode('utf-8')
+        salt = bcrypt.gensalt()
+        hash = bcrypt.hashpw(bytes, salt)
 
     def sign_in(self, user_check):
         user_name = user_check['username']

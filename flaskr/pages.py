@@ -114,8 +114,6 @@ def make_endpoints(app):
             'username' : request.form.get('Username'),
             'password' : request.form.get('Password')
         }
-
-        if new_user['username'] == "" or new_user['password'] == "":
-            return redirect("/")
-
-        return redirect(url_for('welcome'))
+        be = backend.Backend(app)
+        be.sign_up(new_user)
+        return render_template('welcome.html')
