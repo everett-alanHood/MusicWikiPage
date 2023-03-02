@@ -95,9 +95,14 @@ def make_endpoints(app):
         logout_user()
         return render_template('/')
 
-    @app.route('/upload')
+    @app.route('/upload', methods=['GET','POST'])
     @login_required
     def upload():
+        if request.method == 'POST':
+            image = request.files.get('image')
+            #call backend to sent file to buckets          
+            print("done",image)
+            return redirect(url_for("home"))
         return render_template('upload.html')
 
 
