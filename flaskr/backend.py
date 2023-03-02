@@ -33,7 +33,8 @@ class Backend:
         user_blob = self.bucket_content.blob(f"{user_name}.txt")
 
         user_pass = user_info['password']
-        encoded = base64.b64encode(hashlib.sha256(user_pass).digest()) # encoded = user_info['password'].encode('utf-8')
+        mixed = f'{user_pass}hi{user_name}'
+        encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest()) # encoded = user_info['password'].encode('utf-8')
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
 
@@ -49,7 +50,8 @@ class Backend:
         hash_pass = content[1]
 
         user_pass = user_check['password']
-        encoded = base64.b64encode(hashlib.sha256(user_pass).digest())
+        mixed = f'{user_pass}hi{user_name}'
+        encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         
         if not bcrypt.checkpw(encoded, hash_pass):
             return False, tuple()
