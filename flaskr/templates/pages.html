@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html>
-<head>
     <head>
-        <title>Page contain within this wiki</title>
+        <title>All Pages</title>
     </head>
-</head>
-<body>
-    <div>       
-        <h1>Page contain within this wiki</h1>
-        <p><a href="/pages/pitch">Pitch</a>
-        <p><a href="/pages/chord">Chord</a>
-        <p><a href="/pages/harmony">Harmony</a>
-        <P><a href="pages/rhythm">Rhythm</a>
-    </div>
-</body>
+    <body>
+        <div>       
+            
+            {% include 'header.html' %}
+            
+            {% block content %}
+            <h1>Page contain within this wiki</h1>
+            <p><a href="/pages/pitch">Pitch</a>
+            <p><a href="/pages/chord">Chord</a>
+            <p><a href="/pages/harmony">Harmony</a>
+            <P><a href="pages/rhythm">Rhythm</a>
+            {% endblock %}
+        </div>
+    </body>
+</html>

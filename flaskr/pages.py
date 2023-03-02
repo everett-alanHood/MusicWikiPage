@@ -14,7 +14,7 @@ def make_endpoints(app):
         def __init__(self, user):
             self.name = user[0]
             self.username = user[1]
-            self.id = user[2]
+            self.id = f'{user[0]}{user[1]}'
 
         def get_id(self):
             return self.id
@@ -40,7 +40,7 @@ def make_endpoints(app):
     # go to a specific route on the project's website.
     # @app.route('name_of_page')
     
-    @app.route("/")
+    @app.route('/')
     # @app.route('/main')
     def home():
         return render_template("main.html")
@@ -53,12 +53,18 @@ def make_endpoints(app):
 
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
+        # return redirect(url_for('pages_next', sub_page=sub_page))
         return render_template(f'{sub_page}.html')
 
     @app.route('/about')
     def about():
         return render_template('about.html')
-
+    
+    @app.route('/welcome')
+    @login_required
+    def welcome():
+        return render_template('welcome.html')
+        
 
     @app.route('/login', methods=['GET'])
     def get_login():
@@ -73,33 +79,26 @@ def make_endpoints(app):
         }
 
         be = backend.Backend(app)
-        valid_user = be.sign_in(user_check)
+        valid, data = be.sign_in(user_check)
         
-        if not valid_user[0]:
+        if not valid:
             return render_template('login.html', error='Incorret Username and/or Password')
             
-        user = load_user(True, valid_user)
+        user = load_user(True, data)
         login_user(user)
 
         return redirect(url_for('welcome'))
-        
-        
-
-    @app.route('/welcome')
-    @login_required
-    def welcome():
-        return render_template('welcome.html')
-
-    @app.route('/upload')
-    @login_required
-    def upload():
-        return render_template('upload.html')
 
     @app.route('/logout')
     @login_required
     def logout():
         logout_user()
         return render_template('/')
+
+    @app.route('/upload')
+    @login_required
+    def upload():
+        return render_template('upload.html')
 
 
     @app.route('/signup', methods=['GET'])
@@ -114,6 +113,25 @@ def make_endpoints(app):
             'username' : request.form.get('Username'),
             'password' : request.form.get('Password')
         }
+
         be = backend.Backend(app)
         be.sign_up(new_user)
+
         return render_template('welcome.html')
+
+    @app.errorhandler(405)
+    def invalid_method(error):
+        flash('Incorrect method used, try again')
+        return redirect(url_for('/')), 405
+
+    """
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    """

@@ -1,6 +1,16 @@
-<body>
-    <div>       
-        <h1>Chord</h1>
-        <p>This is the chord page</p>
-    </div>
-</body>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chord Page</title>
+    </head>
+    <body>
+        <div>       
+            {% include 'header.html' %}
+            
+            {% block content%}
+            <h1>Chord</h1>
+            <p>This is the chord page</p>
+            {% endblock %}
+        </div>
+    </body>
+</html>

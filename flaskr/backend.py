@@ -1,7 +1,10 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-import bcrypt #encode, gensalt, hashpw, checkpw
+#Hasing password
+import bcrypt #gensalt, hashpw, checkpw
+import base64
+import hashlib
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
@@ -28,27 +31,30 @@ class Backend:
     def sign_up(self, user_info):
         user_name = user_info['username']
         user_blob = self.bucket_content.blob(f"{user_name}.txt")
-        bytes = user_info['password'].encode('utf-8')
+
+        user_pass = user_info['password']
+        encoded = base64.b64encode(hashlib.sha256(user_pass).digest()) # encoded = user_info['password'].encode('utf-8')
         salt = bcrypt.gensalt()
-        hash = bcrypt.hashpw(bytes, salt)
+        hash_pass = bcrypt.hashpw(encoded, salt)
 
     def sign_in(self, user_check):
         user_name = user_check['username']
         user_blob = self.bucket_content.blob(f"{user_name}.txt")
 
         if not user_blob.exists():
-            return (False,)
-        
-        user_pass = user_check['password']
+            return False, tuple()
         
         content = user_blob.download_as_string().split('\n')
         name = content[0]
         hash_pass = content[1]
 
-        if not bcrypt.checkpw(user_pass, hash_pass):
-            return (False,)
+        user_pass = user_check['password']
+        encoded = base64.b64encode(hashlib.sha256(user_pass).digest())
+        
+        if not bcrypt.checkpw(encoded, hash_pass):
+            return False, tuple()
 
-        return (True, f'{user_name}', name)
+        return True, (user_name, name)
 
     def get_image(self):
         raise NotImplementedError
@@ -65,8 +71,8 @@ class Backend:
     name = user_info['name']
     user_pass = user_info['username']
 
-    encoded = user_pass.encode()
-    salt = gensalt()
+    encoded = base64.b64encode(hashlib.sha256(user_pass.encode()).digest()
+    salt = bcrypt.gensalt()
     hash_pass = hashpw(encoded, salt)
 
     user_blob.upload_from_string(f"{name}\n{hash_pass}")
