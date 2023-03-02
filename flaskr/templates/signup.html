@@ -7,10 +7,11 @@
         <div>
             {% include 'header.html' %}
             <h1>Sign Up</h1>
-            <form method="post" action="/main">
-                <input type="text" name="Name" placeholder="Your First Name" required="required"/>
-                <input type="text" name="Username" placeholder="Username" required="required"/>
-                <input type="text" name="Password" placeholder="Password" required="required"/>
+            <form method="post" action="/signup">
+                <input type="text" name="Name" placeholder="Your First Name" required="required"/><br/>
+                <input type="text" name="Username" placeholder="Username" required="required"/><br/>
+                <input type="password" name="Password" placeholder="Password" required="required"/><br/>
+                <br/>
                 <input type="submit" value="Sign Up"/>
             </form>
 

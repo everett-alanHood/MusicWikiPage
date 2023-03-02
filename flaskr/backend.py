@@ -1,7 +1,7 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-from bcrypt import encode, gensalt, hashpw, checkpw
+import bcrypt #encode, gensalt, hashpw, checkpw
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
@@ -41,7 +41,7 @@ class Backend:
         name = content[0]
         hash_pass = content[1]
 
-        if not checkpw(user_pass, hash_pass):
+        if not bcrypt.checkpw(user_pass, hash_pass):
             return (False,)
 
         return (True, f'{user_name}', name)
@@ -51,7 +51,7 @@ class Backend:
 
 
 """
-
+    #Sign up
     user_name = user_info['username']
     user_blob = self.bucket_content.blob(f"{user_name}.txt' ")
 
@@ -68,6 +68,9 @@ class Backend:
     user_blob.upload_from_string(f"{name}\n{hash_pass}")
     return (True, user_name)
 
+
+
+    #Writing to file
     def write(self, bucket_name, blob_name, content):
             storage_client = storage.Client()
             bucket = storage_client.bucket(bucket_name)

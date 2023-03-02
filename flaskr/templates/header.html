@@ -3,9 +3,16 @@
         <p> 
             <a href='/'>Home</a> | 
             <a href='/pages'>Pages</a> | 
-            <a href='/about'>About</a>   |   
-            <!--Insert login redirect here-->
-            <a href="/pages/signup">Sign Up</a>
+            <a href='/about'>About</a> |  
+            <!--Login redirect below-->
+            {% if current_user.is_authenticated %}
+                <a> {{current_user.name}} </a> | 
+                <a href='/upload'>Upload</a> | 
+                <button type='button' href='/logout'>Logout</button>
+            {% else %}
+                <a href='/signup'>Sign Up</a> | 
+                <a href='/login'>Login</a>
+            {% endif %}
         </p>
     </body>
 </html>

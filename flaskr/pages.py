@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from flaskr import backend
 from google.cloud import storage
@@ -59,10 +59,13 @@ def make_endpoints(app):
     def about():
         return render_template('about.html')
 
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if request.method != 'POST':
-            raise NotImplementedError
+
+    @app.route('/login', methods=['GET'])
+    def get_login():
+        return render_template('login.html')
+
+    @app.route('/auth_login', methods=['POST'])
+    def auth_login():
 
         user_check = {
             'username' : request.form.get('username'),
@@ -72,14 +75,15 @@ def make_endpoints(app):
         be = backend.Backend(app)
         valid_user = be.sign_in(user_check)
         
-        if valid_user[0]:
-            #Display welcome.html, allow user to access Uploads page and Logout option. (No longer able to access singup.html & login.html)
-            user = load_user(True, valid_user)
-            login_user(user)
+        if not valid_user[0]:
+            return render_template('login.html', error='Incorret Username and/or Password')
+            
+        user = load_user(True, valid_user)
+        login_user(user)
 
-            return render_template('welcome.html')
+        return redirect(url_for('welcome'))
         
-        return render_template('login.html', error='Incorret Username and/or Password')
+        
 
     @app.route('/welcome')
     @login_required
@@ -97,10 +101,13 @@ def make_endpoints(app):
         logout_user()
         return render_template('/')
 
-    @app.route('/signup', methods=['GET', 'POST'])
+
+    @app.route('/signup', methods=['GET'])
+    def get_signup():
+        return render_template('signup.html')
+
+    @app.route('/auth_signup', methods=['POST'])
     def sign_up():
-        if request.method != 'POST':
-            raise NotImplementedError
 
         new_user = {
             'name'     : request.form.get('Name'),
@@ -110,4 +117,5 @@ def make_endpoints(app):
 
         if new_user['username'] == "" or new_user['password'] == "":
             return redirect("/")
-        return render_template('welcome.html')
+
+        return redirect(url_for('welcome'))

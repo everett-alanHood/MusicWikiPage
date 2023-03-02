@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Login Page</title>
+    </head>
+    <body>
+        <div>
+            {% include 'header.html' %}
+            <h1>Login</h1>
+            <form method="post" action="/auth_login">
+                <input type="text" name="Username" placeholder="Username" required="required"/><br/>
+                <input type="password" name="Password" placeholder="Password" required="required"/><br/>
+                {% if error %}
+                    <p class='error'>{{ error }}</p>
+                {% endif %}
+                <br/>
+                <input type="submit" value="Sign In"/>
+            </form>
+
+        </div>
+    </body>
+<html>
