@@ -1,6 +1,16 @@
-<body>
-    <div>       
-        <h1>Pitch</h1>
-        <p>Pitch page</p>
-    </div>
-</body>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Pitch Page</title>
+    </head>
+    <body>
+        <div>       
+            {% include 'header.html' %}
+            
+            {% block content%}
+            <h1>Pitch</h1>
+            <p>Pitch is the difference between sounds that makes the sound  lower or higher to the listener.</p>
+            {% endblock %}
+        </div>
+    </body>
+</html>

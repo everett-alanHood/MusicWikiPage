@@ -1,6 +1,16 @@
-<body>
-    <div>       
-        <h1>Harmony</h1>
-        <p>This is the harmony html</p>
-    </div>
-</body>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Harmony Page</title>
+    </head>
+    <body>
+        <div>       
+            {% include 'header.html' %}
+            
+            {% block content%}
+            <h1>Harmony</h1>
+            <p>Harmony is the sound of multiple notes are heard at the same time.</p>
+            {% endblock %}
+        </div>
+    </body>
+</html>
