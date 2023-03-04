@@ -12,11 +12,13 @@
                 <input type="text" name="Username" placeholder="Username" required="required"/><br/>
                 <input type="password" name="Password" placeholder="Password" required="required"/><br/>
                 <br/>
+                {% if error %}
+                    <p class='error'>{{error}}</p>
+                {% endif %}
                 <input type="submit" value="Sign Up"/>
             </form>
 
         </div>
     </body>
-
 
 <html>

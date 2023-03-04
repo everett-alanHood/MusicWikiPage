@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from flaskr import backend
 from google.cloud import storage
 import os
+import uuid
 
 
 def make_endpoints(app):
@@ -11,10 +12,10 @@ def make_endpoints(app):
     login_manager.session_protection = 'strong'    
 
     class User(UserMixin):
-        def __init__(self, name, username):
+        def __init__(self, name):
+            #!!!!!!! DOESNT DISPLAY FULL NAME
             self.name = f'{name}'
-            self.username = f'{username}'
-            self.id = f'{name}{username}'
+            self.id = f'{uuid.uuid4()}'
 
         def get_id(self):
             return self.id
@@ -29,8 +30,8 @@ def make_endpoints(app):
             return False
 
     @login_manager.user_loader
-    def load_user(user_data):
-        user = User(user_data[0], user_data[1])
+    def load_user(name):
+        user = User(name)
         return user
 
     # Flask uses the "app.route" decorator to call methods when users
@@ -71,8 +72,8 @@ def make_endpoints(app):
     def auth_login():
 
         user_check = {
-            'username' : request.form.get('username'),
-            'password' : request.form.get('password')
+            'username' : request.form.get('Username'),
+            'password' : request.form.get('Password')
         }
 
         be = backend.Backend(app)
@@ -80,8 +81,8 @@ def make_endpoints(app):
         
         if not valid:
             return render_template('login.html', error='Incorret Username and/or Password')
-            
-        user = load_user( data)
+        
+        user = load_user(data)
         login_user(user)
 
         return redirect(url_for('welcome'))
@@ -128,6 +129,7 @@ def make_endpoints(app):
         if not valid:
             return render_template('signup.html', error='User already exists')
         
+        # print(f'---------------------------------------------------{data}----------------------------')
         user = load_user(data)
         login_user(user)
 

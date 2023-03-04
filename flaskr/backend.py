@@ -52,38 +52,30 @@ class Backend:
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
-        print(f'---------------------------------------------------------{hash_pass}-----------------------------')
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}")
-        return True, (user_name, name)
+        return True, name
 
 
     def sign_in(self, user_check):
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
         
-        print('---------------------------------------------------1---------------------------------------------------------------------')
-
         if not user_blob.exists():
             return False, tuple()
         
-        print('---------------------------------------------------2---------------------------------------------------------------------')
-
-        content = user_blob.download_as_string().split('\n')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
-        hash_pass = content[1]
+        hash_pass = content[1][2:-1].encode('utf-8')
 
         user_pass = user_check['password']
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
-        
+
         if not bcrypt.checkpw(encoded, hash_pass):
             return False, tuple()
 
-        return True, (user_name, name)
-        
-    def get_image(self):
-        raise NotImplementedError
+        return True, name
 
 
 """
