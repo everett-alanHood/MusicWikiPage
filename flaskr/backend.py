@@ -11,9 +11,9 @@ class Backend:
     
     def __init__(self, app):
         #Used for logging in/out
-        self.app = app
+        test_app = Flask(__name__)
         self.login_manager = LoginManager()
-        self.login_manager.init_app(self.app)
+        self.login_manager.init_app(test_app)
         #Buckets
         storage_client = storage.Client()
         self.bucket_content = storage_client.bucket('minorbugs_content')
@@ -27,20 +27,33 @@ class Backend:
 
     def upload(self, content):
         raise NotImplementedError
+
+    def get_image(self):
+        raise NotImplementedError
     
+
     def sign_up(self, user_info):
         user_name = user_info['username']
-        user_blob = self.bucket_content.blob(f"{user_name}.txt")
+        user_blob = self.bucket_users.blob(f'{user_name}')
+
+        if user_blob.exists():
+            return False, tuple()
 
         user_pass = user_info['password']
+        name = user_info['name']
+
         mixed = f'{user_pass}hi{user_name}'
-        encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest()) # encoded = user_info['password'].encode('utf-8')
+        encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
 
+        user_blob.upload_from_string(f"{name}\n{hash_pass}")
+        return True, (user_name, name)
+
+
     def sign_in(self, user_check):
         user_name = user_check['username']
-        user_blob = self.bucket_content.blob(f"{user_name}.txt")
+        user_blob = self.bucket_users.blob(f"{user_name}")
 
         if not user_blob.exists():
             return False, tuple()
@@ -57,9 +70,6 @@ class Backend:
             return False, tuple()
 
         return True, (user_name, name)
-
-    def get_image(self):
-        raise NotImplementedError
 
 
 """

@@ -31,5 +31,5 @@ def create_app(test_config=None):
     pages.make_endpoints(app)
 
     # """For login and sign up in backend.py"""
-    # app.secret_key = 'temp_key'
+    app.secret_key = 'temp_key'
     return app

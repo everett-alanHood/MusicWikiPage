@@ -29,12 +29,9 @@ def make_endpoints(app):
             return False
 
     @login_manager.user_loader
-    def load_user(log=False, user_data=()):
-        if log:
-            user = User(user_data)
-            return user
-        else:
-            return None
+    def load_user(user_data):
+        user = User(user_data)
+        return user
 
     # Flask uses the "app.route" decorator to call methods when users
     # go to a specific route on the project's website.
@@ -84,7 +81,7 @@ def make_endpoints(app):
         if not valid:
             return render_template('login.html', error='Incorret Username and/or Password')
             
-        user = load_user(True, data)
+        user = load_user( data)
         login_user(user)
 
         return redirect(url_for('welcome'))
@@ -103,6 +100,7 @@ def make_endpoints(app):
             #call backend to sent file to buckets          
             print("done",image)
             return redirect(url_for("home"))
+
         return render_template('upload.html')
 
 
@@ -112,7 +110,7 @@ def make_endpoints(app):
 
     @app.route('/auth_signup', methods=['POST'])
     def sign_up():
-
+        
         new_user = {
             'name'     : request.form.get('Name'),
             'username' : request.form.get('Username'),
@@ -120,9 +118,15 @@ def make_endpoints(app):
         }
 
         be = backend.Backend(app)
-        be.sign_up(new_user)
+        valid, data = be.sign_up(new_user)
 
-        return render_template('welcome.html')
+        if not valid:
+            return render_template('signup.html', error='')
+        
+        user = load_user(data)
+        login_user(user)
+
+        return redirect(url_for('welcome'))
 
     @app.errorhandler(405)
     def invalid_method(error):
