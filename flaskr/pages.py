@@ -11,10 +11,10 @@ def make_endpoints(app):
     login_manager.session_protection = 'strong'    
 
     class User(UserMixin):
-        def __init__(self, user):
-            self.name = user[0]
-            self.username = user[1]
-            self.id = f'{user[0]}{user[1]}'
+        def __init__(self, name, username):
+            self.name = f'{name}'
+            self.username = f'{username}'
+            self.id = f'{name}{username}'
 
         def get_id(self):
             return self.id
@@ -30,7 +30,7 @@ def make_endpoints(app):
 
     @login_manager.user_loader
     def load_user(user_data):
-        user = User(user_data)
+        user = User(user_data[0], user_data[1])
         return user
 
     # Flask uses the "app.route" decorator to call methods when users
@@ -90,7 +90,7 @@ def make_endpoints(app):
     @login_required
     def logout():
         logout_user()
-        return render_template('/')
+        return redirect('/')
 
     @app.route('/upload', methods=['GET','POST'])
     @login_required
@@ -121,7 +121,7 @@ def make_endpoints(app):
         valid, data = be.sign_up(new_user)
 
         if not valid:
-            return render_template('signup.html', error='')
+            return render_template('signup.html', error='User already exists')
         
         user = load_user(data)
         login_user(user)
