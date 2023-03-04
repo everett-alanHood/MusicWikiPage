@@ -5,6 +5,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 import bcrypt #gensalt, hashpw, checkpw
 import base64
 import hashlib
+import os
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
@@ -26,8 +27,13 @@ class Backend:
         raise NotImplementedError
 
     def upload(self, content):
-        raise NotImplementedError
-
+        storage_client = storage.Client()
+        bucket = storage_client.bucket('minorbugs_content')
+        print(os.path.basename(content.name))
+        blob = bucket.blob(os.path.basename(content.name))
+        blob.upload_from_file(content)
+        return True
+            
     def get_image(self):
         raise NotImplementedError
     
@@ -75,6 +81,9 @@ class Backend:
             return False, tuple()
 
         return True, (user_name, name)
+        
+    def get_image(self):
+        raise NotImplementedError
 
 
 """

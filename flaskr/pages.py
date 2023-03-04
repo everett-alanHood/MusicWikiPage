@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from flaskr import backend
 from google.cloud import storage
-
+import os
 
 
 def make_endpoints(app):
@@ -96,9 +96,14 @@ def make_endpoints(app):
     @login_required
     def upload():
         if request.method == 'POST':
-            image = request.files.get('image')
-            #call backend to sent file to buckets          
-            print("done",image)
+            file = request.files['image']
+            filename = os.path.basename(file.filename)
+            file.save(f"images/%s" % filename)
+            image = open(f"images/%s" % filename, "rb")
+            be = backend.Backend(app)
+            be.upload(image)
+            image.close()
+            os.remove("images/%s" % filename)
             return redirect(url_for("home"))
 
         return render_template('upload.html')
