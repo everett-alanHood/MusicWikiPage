@@ -102,11 +102,11 @@ def make_endpoints(app):
             filename = os.path.basename(file.filename)
             #gets directory from the cloud as opposed to your system, no idea why
             directory = os.path.abspath(file.filename)
+            #what the directory looks like in console
             print("\n\n\n\n")
             print(filename)
             print(directory)
             print("\n\n\n")
-            return redirect(url_for("home"))
             if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
                 file.save(f"images/%s" % directory)
                 image = open(f"images/%s" % directory, "rb")
