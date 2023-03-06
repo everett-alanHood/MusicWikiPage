@@ -4,6 +4,7 @@ from flaskr import backend
 from google.cloud import storage
 import os
 import uuid
+import zipfile
 
 
 def make_endpoints(app):
@@ -95,16 +96,38 @@ def make_endpoints(app):
 
     @app.route('/upload', methods=['GET','POST'])
     @login_required
-    def upload():
+    def upload(): #FIXIT doesn't properly route to the user's system
         if request.method == 'POST':
             file = request.files['image']
             filename = os.path.basename(file.filename)
-            file.save(f"images/%s" % filename)
-            image = open(f"images/%s" % filename, "rb")
-            be = backend.Backend(app)
-            be.upload(image)
-            image.close()
-            os.remove("images/%s" % filename)
+            #gets directory from the cloud as opposed to your system, no idea why
+            directory = os.path.abspath(file.filename)
+            print("\n\n\n\n")
+            print(filename)
+            print(directory)
+            print("\n\n\n")
+            return redirect(url_for("home"))
+            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
+                file.save(f"images/%s" % directory)
+                image = open(f"images/%s" % directory, "rb")
+                be = backend.Backend(app)
+                be.upload(image)
+                image.close()
+                os.remove("images/%s" % directory)
+            elif filename.endswith('.zip'):
+                with zipfile.ZipFile(directory, 'r') as z:
+                    for zipped_image in z.namelist():
+                        if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png'):
+                            file.save(f"images/%s" % zipped_image)
+                            image = open(f"images/%s" % zipped_image, "rb")
+                            be = backend.Backend(app)
+                            be.upload(image)
+                            image.close()
+                            os.remove("images/%s" % zipped_image)
+            else:
+                render_template('upload.html', error='Incorret File Type')
+            
+            
             return redirect(url_for("home"))
 
         return render_template('upload.html')

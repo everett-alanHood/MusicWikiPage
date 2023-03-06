@@ -7,9 +7,12 @@
     {% include 'header.html' %}
     <br>
     <form method="POST" action="" enctype="multipart/form-data">
-    <input type="file" id="img" name="image" accept="image/*,.md" required="required">
+    <input type="file" id="img" name="image" accept="image/*,.zip" required="required">
     <br>
-    <input type="submit" value="Submit">
+    {% if error %}
+        <p class='error'>{{error}}</p>
+    {% endif %}
+        <input type="submit" value="Submit"/>
     </form>   
     
     
