@@ -51,8 +51,8 @@ def make_endpoints(app):
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
         be = backend.Backend(app)
-        md_content = be.get_wiki_page(sub_page)
-        return render_template(f'{sub_page}.html', md_content=md_content)
+        html_content = be.get_wiki_page(sub_page)
+        return render_template(f'{sub_page}.html', content=html_content)
 
     @app.route('/about')
     def about():

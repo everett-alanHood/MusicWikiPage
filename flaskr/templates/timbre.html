@@ -6,10 +6,7 @@
     <body>
         <div>       
             {% include 'header.html' %}
-            
-            {% block content%}
-            {{md_content|markdown}}
-            {% endblock %}
+            {{content|safe}}
         </div>
     </body>
 </html>

@@ -6,6 +6,7 @@ import bcrypt #gensalt, hashpw, checkpw
 import base64
 import hashlib
 import os
+from markdown import markdown
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
@@ -38,7 +39,8 @@ class Backend:
     def get_wiki_page(self, page_name):
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')#.split('')
-        return md_content
+        html_content = markdown(md_content)
+        return html_content
 
 
     def upload(self, content):
