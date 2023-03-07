@@ -8,8 +8,7 @@
             {% include 'header.html' %}
             
             {% block content%}
-            <h1>Harmony</h1>
-            <p>Harmony is the sound of multiple notes are heard at the same time.</p>
+            {{md_content|markdown}}
             {% endblock %}
         </div>
     </body>

@@ -8,8 +8,7 @@
             {% include 'header.html' %}
             
             {% block content%}
-            <h1>Melody</h1>
-            <p>Melody is when musicial notes are perform at succession in which the listener likes.</p>
+            {{md_content|markdown}}
             {% endblock %}
         </div>
     </body>

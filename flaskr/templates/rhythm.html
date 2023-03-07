@@ -8,8 +8,7 @@
             {% include 'header.html' %}
             
             {% block content%}
-            <h1>Rhythm</h1>
-            <p>Rhythm are sounds that have repeated pattern of notes witin a reapted duration.</p>
+            {{md_content|markdown}}
             {% endblock %}
         </div>
     </body>

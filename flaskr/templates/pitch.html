@@ -8,8 +8,7 @@
             {% include 'header.html' %}
             
             {% block content%}
-            <h1>Pitch</h1>
-            <p>Pitch is the difference between sounds that makes the sound  lower or higher to the listener.</p>
+            {{md_content|markdown}}
             {% endblock %}
         </div>
     </body>

@@ -5,12 +5,14 @@ from google.cloud import storage
 import os
 import uuid
 import zipfile
+from flaskext.markdown import Markdown
 
 
 def make_endpoints(app):
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.session_protection = 'strong'    
+    login_manager.session_protection = 'strong' 
+    Markdown(app)       
 
     class User(UserMixin):
         def __init__(self, name):
@@ -34,26 +36,23 @@ def make_endpoints(app):
     def load_user(name):
         user = User(name)
         return user
-
-    # Flask uses the "app.route" decorator to call methods when users
-    # go to a specific route on the project's website.
-    # @app.route('name_of_page')
     
     @app.route('/')
     # @app.route('/main')
     def home():
         return render_template("main.html")
 
-    # TODO(Project 1): Implement additional routes according to the project requirements.
-
     @app.route('/pages')
     def pages():
-        return render_template('pages.html')
+        be = backend.Backend(app)
+        page_names = be.get_all_page_names()
+        return render_template('pages.html', page_names=page_names)
 
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
-        # return redirect(url_for('pages_next', sub_page=sub_page))
-        return render_template(f'{sub_page}.html')
+        be = backend.Backend(app)
+        md_content = be.get_wiki_page(sub_page)
+        return render_template(f'{sub_page}.html', md_content=md_content)
 
     @app.route('/about')
     def about():
@@ -96,7 +95,7 @@ def make_endpoints(app):
 
     @app.route('/upload', methods=['GET','POST'])
     @login_required
-    def upload(): #FIXIT doesn't properly route to the user's system
+    def upload(): #TODO doesn't properly route to the user's system #TODO A user can overwrite a pre-existing markdown, some check needs to be created when uploading
         if request.method == 'POST':
             file = request.files['image']
             filename = os.path.basename(file.filename)
@@ -107,7 +106,7 @@ def make_endpoints(app):
             print(filename)
             print(directory)
             print("\n\n\n")
-            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
+            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):# or filename.endswith('.md')
                 file.save(f"images/%s" % directory)
                 image = open(f"images/%s" % directory, "rb")
                 be = backend.Backend(app)
@@ -152,7 +151,6 @@ def make_endpoints(app):
         if not valid:
             return render_template('signup.html', error='User already exists')
         
-        # print(f'---------------------------------------------------{data}----------------------------')
         user = load_user(data)
         login_user(user)
 

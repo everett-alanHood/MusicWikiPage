@@ -5,18 +5,15 @@
     </head>
     <body>
         <div>       
-            
             {% include 'header.html' %}
+
+            <h3>Sub-Pages</h3>
             {% block content %}
-            <h1>Page contain within this wiki</h1>
-            <p><a href="/pages/pitch">Pitch</a>
-            <p><a href="/pages/chord">Chord</a>
-            <p><a href="/pages/harmony">Harmony</a>
-            <P><a href="pages/rhythm">Rhythm</a>
-            <p><a href="pages/melody">Melody</a>
-            <p><a href="pages/scales">Scales</a>
-            <P><a href="pages/timbre">Timbre</a>
+                {% for page_name in page_names %}
+                    <p> <a href="/pages/{{page_name}}">{{page_name}}</a> <br/></p>
+                {% endfor %}
             {% endblock %}
+            
         </div>
     </body>
 </html>

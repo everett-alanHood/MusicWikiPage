@@ -20,17 +20,32 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
     
-    def get_wiki_page(self, name):
-        raise NotImplementedError
-
     def get_all_page_names(self):
-        raise NotImplementedError
+        all_blobs = list(self.bucket_content.list_blobs())
+        white_list = {'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
+        #Could add a feature where users can upload their own content??
+
+        page_names = []
+        for blob in all_blobs:
+            name = blob.name.split('.')
+            if name[0] in white_list and name[-1] == 'md':
+                page_names.append(name[0])
+        
+        page_names.sort()
+        return page_names
+
+
+    def get_wiki_page(self, page_name):
+        md_blob = self.bucket_content.blob(f'{page_name}.md')
+        md_content = md_blob.download_as_string().decode('utf-8')#.split('')
+        return md_content
+
 
     def upload(self, content):
         storage_client = storage.Client()
-        bucket = storage_client.bucket('minorbugs_content')
+        bucket = storage_client.bucket('minorbugs_content') #bucket already in self
         print(os.path.basename(content.name))
-        blob = bucket.blob(os.path.basename(content.name))
+        blob = bucket.blob(os.path.basename(content.name)) #blob = self.bucket_content.blob(os.path.basename(content.name)) 
         blob.upload_from_file(content)
         return True
             

@@ -8,8 +8,7 @@
             {% include 'header.html' %}
             
             {% block content%}
-            <h1>Chord</h1>
-            <p>Chord is a set of harmonic notes that are played simultaneously.</p>
+            {{md_content|markdown}}
             {% endblock %}
         </div>
     </body>
