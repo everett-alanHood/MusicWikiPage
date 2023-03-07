@@ -16,7 +16,7 @@ def make_endpoints(app):
 
     class User(UserMixin):
         def __init__(self, name):
-            #!!!!!!! DOESNT DISPLAY FULL NAME
+            #TODO Doesnt display full name, but instead the id, fixit
             self.name = f'{name}'
             self.id = f'{uuid.uuid4()}'
 
@@ -95,7 +95,10 @@ def make_endpoints(app):
 
     @app.route('/upload', methods=['GET','POST'])
     @login_required
-    def upload(): #TODO doesn't properly route to the user's system #TODO A user can overwrite a pre-existing markdown, some check needs to be created when uploading
+    def upload(): 
+        #TODO doesn't properly route to the user's system 
+        #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
+        #TODO A user should be able to upload .md files
         if request.method == 'POST':
             image = request.files.get('image')
             #call backend to sent file to buckets          
