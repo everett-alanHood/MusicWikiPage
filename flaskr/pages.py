@@ -98,25 +98,25 @@ def make_endpoints(app):
     @login_required
     def upload(): #FIXIT doesn't properly route to the user's system
         if request.method == 'POST':
+            image = request.files.get('image')
+            #call backend to sent file to buckets          
+            print("done",image)
             file = request.files['image']
             filename = os.path.basename(file.filename)
-            #gets directory from the cloud as opposed to your system, no idea why
-            directory = os.path.abspath(file.filename)
-            #what the directory looks like in console
-            print("\n\n\n\n")
-            print(filename)
-            print(directory)
-            print("\n\n\n")
+            #case where the file is an image
             if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
-                file.save(f"images/%s" % directory)
-                image = open(f"images/%s" % directory, "rb")
+                file.save(f"images/%s" % filename)
+                image = open(f"images/%s" % filename, "rb")
                 be = backend.Backend(app)
                 be.upload(image)
                 image.close()
-                os.remove("images/%s" % directory)
+                os.remove("images/%s" % filename)
+                return redirect(url_for("home"))
+            #case where the file is a zip
             elif filename.endswith('.zip'):
-                with zipfile.ZipFile(directory, 'r') as z:
+                 with zipfile.ZipFile(file, 'r') as z:
                     for zipped_image in z.namelist():
+                        #upload the files that are images only
                         if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png'):
                             file.save(f"images/%s" % zipped_image)
                             image = open(f"images/%s" % zipped_image, "rb")
@@ -126,12 +126,8 @@ def make_endpoints(app):
                             os.remove("images/%s" % zipped_image)
             else:
                 render_template('upload.html', error='Incorret File Type')
-            
-            
-            return redirect(url_for("home"))
 
         return render_template('upload.html')
-
 
     @app.route('/signup', methods=['GET'])
     def get_signup():
