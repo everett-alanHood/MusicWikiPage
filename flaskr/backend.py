@@ -57,7 +57,7 @@ class Backend:
         user_blob = self.bucket_users.blob(f'{user_name}')
 
         if user_blob.exists():
-            return False, tuple()
+            return False, 0
 
         user_pass = user_info['password']
         name = user_info['name']
