@@ -19,7 +19,7 @@ def make_endpoints(app):
             #TODO Doesnt display full name, but instead the id, fixit
             self.name = f'{name}'
             self.id = f'{uuid.uuid4()}'
-
+        
         def get_id(self):
             return self.id
 
@@ -82,6 +82,7 @@ def make_endpoints(app):
         if not valid:
             return render_template('login.html', error='Incorret Username and/or Password')
         
+        print(data)
         user = load_user(data)
         login_user(user)
 
@@ -106,7 +107,7 @@ def make_endpoints(app):
             file = request.files['image']
             filename = os.path.basename(file.filename)
             #case where the file is an image
-            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
+            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
                 file.save(f"images/%s" % filename)
                 image = open(f"images/%s" % filename, "rb")
                 be = backend.Backend(app)
@@ -119,7 +120,7 @@ def make_endpoints(app):
                  with zipfile.ZipFile(file, 'r') as z:
                     for zipped_image in z.namelist():
                         #upload the files that are images only
-                        if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png'):
+                        if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png') or filename.endswith('.md'):
                             file.save(f"images/%s" % zipped_image)
                             image = open(f"images/%s" % zipped_image, "rb")
                             be = backend.Backend(app)

@@ -35,13 +35,11 @@ class Backend:
         page_names.sort()
         return page_names
 
-
     def get_wiki_page(self, page_name):
         md_blob = self.bucket_content.blob(f'{page_name}.md')
-        md_content = md_blob.download_as_string().decode('utf-8')#.split('')
+        md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown(md_content)
         return html_content
-
 
     def upload(self, content):
         storage_client = storage.Client()
@@ -54,7 +52,6 @@ class Backend:
     def get_image(self):
         raise NotImplementedError
     
-
     def sign_up(self, user_info):
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
@@ -79,7 +76,7 @@ class Backend:
         user_blob = self.bucket_users.blob(f'{user_name}')
         
         if not user_blob.exists():
-            return False, tuple()
+            return False, 0
         
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
@@ -90,7 +87,7 @@ class Backend:
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
 
         if not bcrypt.checkpw(encoded, hash_pass):
-            return False, tuple()
+            return False, 0
 
         return True, name
 
