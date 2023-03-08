@@ -41,16 +41,27 @@ class Backend:
         html_content = markdown(md_content)
         return html_content
 
-    def upload(self, content):
+
+    def upload(self, content, filename):
         storage_client = storage.Client()
-        bucket = storage_client.bucket('minorbugs_content') #bucket already in self
+        bucket = self.bucket_content
         print(os.path.basename(content.name))
-        blob = bucket.blob(os.path.basename(content.name)) #blob = self.bucket_content.blob(os.path.basename(content.name)) 
+        blob = bucket.blob(os.path.basename(filename))
         blob.upload_from_file(content)
         return True
             
     def get_image(self):
-        raise NotImplementedError
+        storage_client = storage.Client()
+        bucket = self.bucket_content
+        blobs = storage_client.list_blobs("minorbugs_content")
+        images_lst = []
+        for blob in blobs:
+            if blob.name.endswith(".png") or blob.name.endswith(".jpg") or blob.name.endswith(".jpeg"):
+                blob_img = blob.name
+                images_lst.append(blob_img)
+                
+                blob.download_to_filename(f"flaskr/static/{blob.name}")
+        return images_lst
     
     def sign_up(self, user_info):
         user_name = user_info['username'].lower()

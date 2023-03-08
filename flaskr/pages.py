@@ -101,36 +101,30 @@ def make_endpoints(app):
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
         #TODO A user should be able to upload .md files
         if request.method == 'POST':
-            image = request.files.get('image')
-            #call backend to sent file to buckets          
-            print("done",image)
-            file = request.files['image']
-            filename = os.path.basename(file.filename)
+            uploaded_file = request.files['upload']
+            filename = os.path.basename(uploaded_file.filename)
+            print("FILENAME",filename)
             #case where the file is an image
             if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
-                file.save(f"images/%s" % filename)
-                image = open(f"images/%s" % filename, "rb")
-                be = backend.Backend(app)
-                be.upload(image)
-                image.close()
-                os.remove("images/%s" % filename)
+                uploadImage(uploaded_file, filename)
                 return redirect(url_for("home"))
             #case where the file is a zip
             elif filename.endswith('.zip'):
-                 with zipfile.ZipFile(file, 'r') as z:
+                with zipfile.ZipFile(uploaded_file, 'r') as z:
                     for zipped_image in z.namelist():
                         #upload the files that are images only
-                        if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png') or filename.endswith('.md'):
-                            file.save(f"images/%s" % zipped_image)
-                            image = open(f"images/%s" % zipped_image, "rb")
-                            be = backend.Backend(app)
-                            be.upload(image)
-                            image.close()
-                            os.remove("images/%s" % zipped_image)
+                        if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png'):
+                            uploadImage(z.open(zipped_image), zipped_image)
+                            print("FILENAME",zipped_image)
+                return redirect(url_for("home"))
             else:
                 render_template('upload.html', error='Incorret File Type')
 
         return render_template('upload.html')
+
+    def uploadImage(f, filename):
+        be = backend.Backend(app)
+        be.upload(f, filename)
 
     @app.route('/signup', methods=['GET'])
     def get_signup():
@@ -155,7 +149,13 @@ def make_endpoints(app):
         login_user(user)
 
         return redirect(url_for('welcome'))
-
+        
+    @app.route('/images', methods=['GET', 'POST'])
+    def get_allimages():
+        be = backend.Backend(app)
+        image_lst = be.get_image()
+        return render_template('images.html', image_lst=image_lst)
+        
     @app.errorhandler(405)
     def invalid_method(error):
         flash('Incorrect method used, try again')
