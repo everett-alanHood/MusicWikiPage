@@ -100,19 +100,13 @@ def make_endpoints(app):
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
         #TODO A user should be able to upload .md files
         if request.method == 'POST':
-            image = request.files.get('image')
-            #call backend to sent file to buckets          
-            print("done",image)
-            file = request.files['image']
+            file = request.files['upload']
             filename = os.path.basename(file.filename)
+            print("FILENAME",filename)
             #case where the file is an image
-            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
-                file.save(f"images/%s" % filename)
-                image = open(f"images/%s" % filename, "rb")
+            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
                 be = backend.Backend(app)
-                be.upload(image)
-                image.close()
-                os.remove("images/%s" % filename)
+                be.upload(file,filename)
                 return redirect(url_for("home"))
             #case where the file is a zip
             elif filename.endswith('.zip'):
@@ -154,7 +148,13 @@ def make_endpoints(app):
         login_user(user)
 
         return redirect(url_for('welcome'))
-
+        
+    @app.route('/images', methods=['GET', 'POST'])
+    def get_allimages():
+        be = backend.Backend(app)
+        image_lst = be.get_image()
+        return render_template('images.html', image_lst=image_lst)
+        
     @app.errorhandler(405)
     def invalid_method(error):
         flash('Incorrect method used, try again')
