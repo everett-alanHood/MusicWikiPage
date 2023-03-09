@@ -24,3 +24,32 @@ def test_home_page(client):
     assert b"<h1>" in resp.data
 
 # TODO(Project 1): Write tests for other routes.
+def test_auth_login_failed(self,user_blob,user_name,password):
+    pass
+    
+def test_auth_login_sucesss(self,user_blob,user_name,password):
+    pass
+def test_logout():
+    pass
+def test_home():
+    pass
+def test_pages():
+    pass
+def test_pages_next():
+    pass
+def test_about():
+    pass
+def test_welcome():
+    pass
+def test_get_login():
+    pass
+def test_upload():
+    pass
+def test_get_sign_up_failed():
+    pass
+def test_get_sign_up_success():
+    pass
+def test_sign_up_success():
+    pass
+def test_sign_up_failed():
+    pass
