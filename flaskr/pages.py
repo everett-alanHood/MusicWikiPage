@@ -51,8 +51,9 @@ def make_endpoints(app):
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
         be = backend.Backend(app)
-        html_content = be.get_wiki_page(sub_page)
-        return render_template(f'{sub_page}.html', content=html_content)
+        be.get_wiki_page(sub_page)
+        # html_content = be.get_wiki_page(sub_page)
+        return render_template(f'{sub_page}.html')#, content=html_content)
 
     @app.route('/about')
     def about():
@@ -124,7 +125,7 @@ def make_endpoints(app):
 
     def uploadImage(f, filename):
         be = backend.Backend(app)
-        be.upload(f, filename)
+        return be.upload(f, filename)
 
     @app.route('/signup', methods=['GET'])
     def get_signup():

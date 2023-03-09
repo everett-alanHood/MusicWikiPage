@@ -8,11 +8,12 @@
     <br>
     <form method="POST" action="" enctype="multipart/form-data">
     <input type="file" id="img" name="upload" accept="image/*,.zip,.md" required="required">
+    <p> *Only accepts .jpg, .png, .jpeg or .md</p>
     <br>
     {% if error %}
         <p class='error'>{{error}}</p>
     {% endif %}
-        <input type="submit" value="Submit"/>
+    <input type="submit" value="Submit"/>
     </form>   
     
     

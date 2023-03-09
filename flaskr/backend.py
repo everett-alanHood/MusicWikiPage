@@ -6,7 +6,10 @@ import bcrypt #gensalt, hashpw, checkpw
 import base64
 import hashlib
 import os
-from markdown import markdown
+# from markdown import markdown
+import markdown
+import re
+
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
@@ -20,16 +23,19 @@ class Backend:
         storage_client = storage.Client()
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
-    
+        #page urls
+        self.pages = {'/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload', 'signup', 'images'}
+        self.sub_pages = {'test_url', 'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
+        self.all_pages = self.pages | self.sub_pages
+
     def get_all_page_names(self):
         all_blobs = list(self.bucket_content.list_blobs())
-        white_list = {'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
         #Could add a feature where users can upload their own content??
 
         page_names = []
         for blob in all_blobs:
             name = blob.name.split('.')
-            if name[0] in white_list and name[-1] == 'md':
+            if name[0] in self.sub_pages and name[-1] == 'md':
                 page_names.append(name[0])
         
         page_names.sort()
@@ -37,19 +43,37 @@ class Backend:
 
     def get_wiki_page(self, page_name):
         md_blob = self.bucket_content.blob(f'{page_name}.md')
-        md_content = md_blob.download_as_string().decode('utf-8')
-        html_content = markdown(md_content)
-        return html_content
-
+        md_path = f'flaskr/temp_markdown/{page_name}'
+        html_path = f'flaskr/templates/{page_name}.html'        
+        md_blob.download_to_filename(md_path)
+        markdown.markdownFromFile(input=md_path, output=html_path, encoding='utf-8')
+        # md_content = md_blob.download_as_string().decode('utf-8')
+        # html_content = markdown(md_content)
+        # return html_content
 
     def upload(self, content, filename):
-        storage_client = storage.Client()
-        bucket = self.bucket_content
         print(os.path.basename(content.name))
-        blob = bucket.blob(os.path.basename(filename))
+        blob = self.bucket_content.blob(os.path.basename(filename))
+
+        if filename.endswith('.md'):
+            if not self.url_check(content, filename):
+                return False 
+            content.seek(0)
+        
         blob.upload_from_file(content)
         return True
-            
+
+    def url_check(self, file_content, filename):
+        content = str(file_content.read())
+        check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
+
+        for url in check_urls:
+            if url[1][1:] in self.all_pages:pass
+            elif url[1][2:] in self.all_pages:pass
+            else:
+                return False
+        return True
+
     def get_image(self):
         storage_client = storage.Client()
         bucket = self.bucket_content
@@ -59,8 +83,8 @@ class Backend:
             if blob.name.endswith(".png") or blob.name.endswith(".jpg") or blob.name.endswith(".jpeg"):
                 blob_img = blob.name
                 images_lst.append(blob_img)
-                
                 blob.download_to_filename(f"flaskr/static/{blob.name}")
+
         return images_lst
     
     def sign_up(self, user_info):
