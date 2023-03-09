@@ -1,7 +1,7 @@
 {% include 'header.html' %}
 
 {% block page_name %}
-About This Wiki
+<title>About This Wiki</title>
 {% endblock %}
 
 {% block content %}
@@ -9,9 +9,13 @@ About This Wiki
 
 <!-- TODO(Project 1): Add info about the wiki. -->
 
-<h3>Your Authors</h3>
+<h1>Your Authors</h1>
 
 <!-- TODO(Project 1): Add team members and pictures to about page. -->
+{% for pic in authors %}
+        <h2>{{pic.1}}</h2>
+        <li><img src="{{pic.0}}" alt="{{pic.0}}"  width="300" height="300"></li>
+    {% endfor %}
 
 {% endblock %}
 
