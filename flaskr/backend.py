@@ -103,6 +103,20 @@ class Backend:
         
         return images_lst
     
+    def get_about(self):
+        storage_client = storage.Client()
+        blobs = storage_client.list_blobs("minorbugs_images")
+        images_lst = []
+        for blob in blobs:
+            if blob.name.startswith("[Author]"):
+                blob_img = blob.public_url
+                name = blob.name.split(",")[1]
+                images_lst.append((blob_img, name))
+            else:
+                continue
+        images_lst.sort()
+        return images_lst
+
     def sign_up(self, user_info):
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
