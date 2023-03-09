@@ -43,10 +43,21 @@ class Backend:
 
     def get_wiki_page(self, page_name):
         md_blob = self.bucket_content.blob(f'{page_name}.md')
-        md_path = f'flaskr/temp_markdown/{page_name}'
-        html_path = f'flaskr/templates/{page_name}.html'        
+
+        md_path = f'flaskr/temp_markdown/{page_name}.md'
+        html_path = f'flaskr/templates/{page_name}.html'
+        
         md_blob.download_to_filename(md_path)
         markdown.markdownFromFile(input=md_path, output=html_path, encoding='utf-8')
+        
+        with open(html_path, 'r') as f:
+            html_content = f.read()           
+        
+        html_header = "{% include 'header.html' %}" + html_content
+    
+        with open(html_path, 'w') as f:
+            f.write(html_header)
+        
         # md_content = md_blob.download_as_string().decode('utf-8')
         # html_content = markdown(md_content)
         # return html_content
