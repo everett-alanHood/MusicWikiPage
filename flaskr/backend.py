@@ -26,7 +26,7 @@ class Backend:
         self.bucket_images = storage_client.bucket('minorbugs_images')
         #page urls
         self.pages = {'/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload', 'signup', 'images'}
-        self.sub_pages = {'test_url', 'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
+        self.sub_pages = {'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
         self.all_pages = self.pages | self.sub_pages
 
     def get_all_page_names(self):
@@ -134,7 +134,6 @@ class Backend:
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}")
         return True, name
-
 
     def sign_in(self, user_check):
         user_name = user_check['username'].lower()

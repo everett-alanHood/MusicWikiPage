@@ -66,7 +66,6 @@ def make_endpoints(app):
     def welcome():
         return render_template('welcome.html')
         
-
     @app.route('/login', methods=['GET'])
     def get_login():
         return render_template('login.html')
