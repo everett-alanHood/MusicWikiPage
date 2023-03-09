@@ -57,7 +57,9 @@ def make_endpoints(app):
 
     @app.route('/about')
     def about():
-        return render_template('about.html')
+        be = backend.Backend(app)
+        authors = be.get_about()
+        return render_template('about.html', authors=authors)
     
     @app.route('/welcome')
     @login_required

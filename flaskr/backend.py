@@ -23,6 +23,7 @@ class Backend:
         storage_client = storage.Client()
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
+        self.bucket_images = storage_client.bucket('minorbugs_images')
         #page urls
         self.pages = {'/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload', 'signup', 'images'}
         self.sub_pages = {'test_url', 'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
@@ -64,13 +65,15 @@ class Backend:
 
     def upload(self, content, filename):
         print(os.path.basename(content.name))
-        blob = self.bucket_content.blob(os.path.basename(filename))
+        
 
         if filename.endswith('.md'):
             if not self.url_check(content, filename):
                 return False 
             content.seek(0)
-        
+            blob = self.bucket_content.blob(os.path.basename(filename))
+        else:
+            blob = self.bucket_images.blob(os.path.basename(filename))
         blob.upload_from_file(content)
         return True
 
@@ -87,15 +90,27 @@ class Backend:
 
     def get_image(self):
         storage_client = storage.Client()
-        bucket = self.bucket_content
-        blobs = storage_client.list_blobs("minorbugs_content")
+        blobs = storage_client.list_blobs("minorbugs_images")
         images_lst = []
         for blob in blobs:
-            if blob.name.endswith(".png") or blob.name.endswith(".jpg") or blob.name.endswith(".jpeg"):
-                blob_img = blob.name
-                images_lst.append(blob_img)
-                blob.download_to_filename(f"flaskr/static/{blob.name}")
+            if blob.name.startswith("[Author]"):
+                continue
+            blob_img = blob.public_url
+            images_lst.append(blob_img)
+        return images_lst
 
+    def get_about(self):
+        storage_client = storage.Client()
+        blobs = storage_client.list_blobs("minorbugs_images")
+        images_lst = []
+        for blob in blobs:
+            if blob.name.startswith("[Author]"):
+                blob_img = blob.public_url
+                name = blob.name.split(",")[1]
+                images_lst.append((blob_img, name))
+            else:
+                continue
+        images_lst.sort()
         return images_lst
     
     def sign_up(self, user_info):
