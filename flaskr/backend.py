@@ -13,7 +13,7 @@ import re
 
 # TODO(Project 1): Implement Backend according to the requirements.
 class Backend:
-    
+
     def __init__(self, app):
         #Used for logging in/out
         test_app = Flask(__name__)
@@ -64,15 +64,16 @@ class Backend:
         # return html_content
 
     def upload(self, content, filename):
-        print(os.path.basename(content.name))
-
+        #print(os.path.basename(content.name))
         if filename.endswith('.md'):
             if not self.url_check(content, filename):
                 return False 
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
-        else:
+        elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
+        else:
+            return False
         
         blob.upload_from_file(content)
         return True
@@ -100,7 +101,7 @@ class Backend:
                 continue
             blob_img = blob.public_url
             images_lst.append(blob_img)
-        
+        images_lst.sort()
         return images_lst
     
     def get_about(self):

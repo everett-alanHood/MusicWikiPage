@@ -121,7 +121,7 @@ def make_endpoints(app):
                             print("FILENAME",zipped_image)
                 return redirect(url_for("home"))
             else:
-                render_template('upload.html', error='Incorret File Type')
+                render_template('upload.html', error='Incorrect File Type')
 
         return render_template('upload.html')
 
