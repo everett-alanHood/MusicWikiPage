@@ -31,9 +31,6 @@ def test_auth_login_sucesss(self,user_blob,user_name,password):
     pass
 
 def test_logout():
-    file = MagicMock()
-    file.name = 'test.txt'
-    file.name.endswith = lambda x: file.name.endswith(x)
     pass
 
 def test_home():

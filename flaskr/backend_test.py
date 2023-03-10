@@ -13,10 +13,13 @@ def test_upload_failed(file):
     pass
 def test_upload_sucess(file):
     pass
+
 def test_get_all_pages_names():
     pass
 def test_get_wiki_page(page_name):
+    
     pass
+
 def test_get_image():
     pass
 
