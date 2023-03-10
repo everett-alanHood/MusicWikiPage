@@ -4,16 +4,17 @@ import pytest
 
 class storage_client_mock:
     def __init__(self, app_mock=None):
+        
         pass
 
-    def bucket(self, bucket_name):
+    def bucket(self, bucket_name='test'):
       return bucket_object(bucket_name)
 
 
 class bucket_object:
     def __init__(self, bucket_name):
         self.bucket_name = bucket_name
-        self.blobz = []
+        self.blobz = dict()
 
     def list_blobs(self):
         return self.blobz
@@ -147,10 +148,12 @@ def test_sign_in_failed(valid_user,invalid_user):
     assert incorrect_password[0] == False and unknown_user[0] == False
     
 def test_sign_in_sucesss(valid_user):
-    back_end = Backend(app, storage_client=storage_client_mock)
+    back_end = Backend(app, SC=storage_client_mock)
     back_end.sign_up(valid_user())
-    back_end.sign_in(valid_user())
-    
+    valid, data = back_end.sign_in(valid_user())
+    assert valid == True
+    assert data == "Everett-Alan"
+
 
     # be = Backend(app)
     # result = be.sign_in(valid_user)
