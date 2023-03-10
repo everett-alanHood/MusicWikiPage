@@ -17,18 +17,30 @@ Returns:
 Raises:
 """
 class Backend:
-    def __init__(self, app):
+    """
+    Explain
+
+    
+    Attributes:
+        bucket_content: 
+        bucket_users: 
+        bucket_images: 
+        pages: Set of all pages on necessary pages on wiki
+        sub_pages: Set of all sub-pages to pages.html
+        all_pages: All valid pages on the wiki (Union of pages and sub_pages)
+    """
+    def __init__(self, app, storage_client = storage.client()):
         """
-        Args: An App from flask (ex. Flask(__name__) )
-        Initializes and creates neccessary attributes for backend
-        Returns: Nothing
-        Raises: N/A
+        Args: 
+            An App from flask (ex. Flask(__name__) )
+        Explain: 
+            Initializes and creates necessary attributes for backend
         """
         test_app = Flask(__name__)
         self.login_manager = LoginManager()
         self.login_manager.init_app(test_app)
         #Buckets
-        storage_client = storage.Client()
+        storage_client = storage_client
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
@@ -40,10 +52,12 @@ class Backend:
 
     def get_all_page_names(self):
         """
-        Args: Nothing
-        Explain: 
-        Returns: List of sub-page names
-        Raises: N/A
+        Args: 
+            Nothing
+        Explain:
+            Gets all markdown sub-pages from google cloud buckets
+        Returns:
+            List of sub-page names (List)
         """
         all_blobs = list(self.bucket_content.list_blobs())
         #Could add a feature where users upload their own content??
@@ -59,10 +73,10 @@ class Backend:
 
     def get_wiki_page(self, page_name):
         """
-        Args: Sub-Page name
-        Explain: 
-        Returns:
-        Raises:
+        Args: A page name (Str)
+        Explain: Converts a specific markdown file to html, 
+                 adds the header, and stores that in local files.
+        Returns: N/A
         """
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_path = f'flaskr/temp_markdown/{page_name}.md'
@@ -83,12 +97,11 @@ class Backend:
 
     def upload(self, content, filename):
         """
-        Args:
-        Explain:
-        Returns:
-        Raises:
+        Args: Contents of a file (IO), the filename (Str)
+        Explain: Uploads a .md, .jpg, .jpeg or .png,
+                 to a google cloud bucket (Content or Images)
+        Returns: (Boolean)
         """
-        #print(os.path.basename(content.name))
         if filename.endswith('.md'):
             if not self.url_check(content, filename):
                 return False 
@@ -104,10 +117,9 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
-        Args: Contents of a file, the filename
-        Explain:
-        Returns:
-        Raises:
+        Args: Contents of a file (IO), the filename (Str)
+        Explain: Checks if a .md file has valid links to the site
+        Returns: (Boolean)
         """
         content = str(file_content.read())
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
@@ -115,16 +127,16 @@ class Backend:
         for url in check_urls:
             if url[1][1:] in self.all_pages:pass
             elif url[1][2:] in self.all_pages:pass
-            else:
+            else: 
                 return False
         return True
 
     def get_image(self):
         """
         Args: Nothing
-        Explain:
-        Returns:
-        Raises:
+        Explain: Retrieves image urls from google cloud 
+                 buckets (Content and Images), excluding authors.
+        Returns: List of image urls (List)
         """
         storage_client = storage.Client()
         bucket = self.bucket_content
@@ -137,15 +149,16 @@ class Backend:
                 continue
             blob_img = blob.public_url
             images_lst.append(blob_img)
+
         images_lst.sort()
         return images_lst
     
     def get_about(self):
         """
         Args: Nothing
-        Explain:
-        Returns:
-        Raises:
+        Explain: Retrieves image urls from google cloud 
+                 buckets (Images), only authors.
+        Returns: List of image urls and author names (List)
         """
         storage_client = storage.Client()
         blobs = storage_client.list_blobs("minorbugs_images")
@@ -157,21 +170,22 @@ class Backend:
                 images_lst.append((blob_img, name))
             else:
                 continue
+
         images_lst.sort()
         return images_lst
 
     def sign_up(self, user_info):
         """
-        Args: A users info, Dict(name, username, password)
-        Explain:
-        Returns:
-        Raises:
+        Args: A users info (Dict(name, username, password))
+        Explain: Adds user to GCB (users), if they dont 
+                 already exist and allows login.
+        Returns: (Boolean), A user's name or empty (str)
         """
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
 
         if user_blob.exists():
-            return False, 0
+            return False, ''
 
         user_pass = user_info['password']
         name = user_info['name']
@@ -186,16 +200,16 @@ class Backend:
 
     def sign_in(self, user_check):
         """
-        Args: Users sign-in info Dict(username, password)
-        Explain:
-        Returns:
-        Raises:
+        Args: Users sign-in info ( Dict(username, password) )
+        Explain: Checks if an existing user entered the correct 
+                 credentials and allows for login.
+        Returns: (Boolean), A user's name or empty (str)
         """
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
         
         if not user_blob.exists():
-            return False, 0
+            return False, ''
         
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
@@ -206,6 +220,6 @@ class Backend:
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
 
         if not bcrypt.checkpw(encoded, hash_pass):
-            return False, 0
+            return False, ''
 
         return True, name
