@@ -170,9 +170,7 @@ def make_endpoints(app):
         GET: Upload Page
         POST: Takes the file passed as an input in the form and sents it to the Backend, redirects the user to the Home page.
         """
-        #TODO doesn't properly route to the user's system 
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
-        #TODO A user should be able to upload .md files
         if request.method == 'POST':
             uploaded_file = request.files['upload']
             filename = os.path.basename(uploaded_file.filename)
