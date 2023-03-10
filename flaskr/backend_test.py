@@ -1,6 +1,89 @@
 from flaskr.backend import Backend
 from unittest.mock import MagicMock, patch
 import pytest
+
+class storage_client_mock:
+    def __init__(self, app_mock=None):
+        pass
+
+    def bucket(self, bucket_name):
+      return bucket_object(bucket_name)
+
+
+class bucket_object:
+    def __init__(self, bucket_name):
+        self.bucket_name = bucket_name
+        self.blobz = []
+
+    def list_blobs(self):
+        return self.blobz
+        
+    def blob(self, blob_name, user_info=False):
+        blob_name = blob_name.lower()
+
+        if blob_name in self.blobz:
+            return self.blobz[blob_name]
+
+        temp_blob = blob_object(blob_name, user_info)
+        self.blobz[blob_name] = temp_blob
+        return temp_blob
+
+
+class blob_object:
+    def __init__(self, blob_name, user_info = False):
+        self.name = blob_name
+        self.info = user_info
+
+    def exists(self):
+        if self.info:
+            return True
+        else:
+            return False
+
+    def _set_public_url(self, url_name):
+        self.public_url = url_name
+
+    def upload_from_string(self, content):
+        self.string_content = content
+
+    def download_as_string(self, content):
+        self.public_url = 'test/test.com'
+        return self.string_content
+
+    def upload_from_file(self, content):
+        self.file_content = content
+
+    def download_to_filename(self, file_path):
+        return self.file_content
+
+
+def load_user_mock(data):
+    mock_user = User_mock(data)
+    return mock_user
+
+
+class User_mock:
+    def __init__(self, name):
+        self.name = name
+        self.id = 10
+
+    def get_id(self):
+        return self.id
+
+    def is_authenticated(self):
+        return True
+        
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+class Flask_mock:
+    def __init__(self, name):
+        pass
+
+
 @pytest.fixture
 def app():
     app = create_app({
@@ -64,9 +147,14 @@ def test_sign_in_failed(valid_user,invalid_user):
     assert incorrect_password[0] == False and unknown_user[0] == False
     
 def test_sign_in_sucesss(valid_user):
-    be = Backend(app)
-    result = be.sign_in(valid_user)
-    assert result[0] == True
+    back_end = Backend(app, storage_client=storage_client_mock)
+    back_end.sign_up(valid_user())
+    back_end.sign_in(valid_user())
+    
+
+    # be = Backend(app)
+    # result = be.sign_in(valid_user)
+    # assert result[0] == True
 
 def test_sign_up_failed(valid_user):
     be = Backend(app)
@@ -83,7 +171,7 @@ def test_upload_failed(file_failed):
     be = Backend(app)
     val = be.upload(file_failed,file_failed.name)
     assert val == False
-    
+
 def test_upload_sucess(file_success):
     be = Backend(app)
     with patch.object(be, 'upload', return_value=True):

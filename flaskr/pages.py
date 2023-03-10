@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-from flaskr import backend
+from flaskr.backend import Backend
 from google.cloud import storage
 import os
 import uuid
@@ -8,7 +8,7 @@ import zipfile
 from flaskext.markdown import Markdown
 
 
-def make_endpoints(app):
+def make_endpoints(app, Backend=Backend):
     """Connects the frontend with the established routes and the backend.
 
     Attributes:
@@ -20,7 +20,8 @@ def make_endpoints(app):
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.session_protection = 'strong' 
-    Markdown(app)       
+    Markdown(app)   
+    Back_end = Backend(app)
 
     class User(UserMixin):
         """User Class that is used by the Login Manager and browser.
@@ -81,8 +82,7 @@ def make_endpoints(app):
 
         GET: Gets page names from the Backend and sends the user to a page showing all of them as a list of hyperlinks.
         """
-        be = backend.Backend(app)
-        page_names = be.get_all_page_names()
+        page_names = Back_end.get_all_page_names()
         return render_template('pages.html', page_names=page_names)
 
     @app.route('/pages/<sub_page>')
@@ -92,8 +92,7 @@ def make_endpoints(app):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        be = backend.Backend(app)
-        be.get_wiki_page(sub_page)
+        Back_end.get_wiki_page(sub_page)
         # html_content = be.get_wiki_page(sub_page)
         return render_template(f'{sub_page}.html')#, content=html_content)
 
@@ -103,8 +102,7 @@ def make_endpoints(app):
 
         GET: Calls Backend to get all Authors information and pictures, then sends the user to the about page that shows all the author's corresponding info.
         """
-        be = backend.Backend(app)
-        authors = be.get_about()
+        authors = Back_end.get_about()
         return render_template('about.html', authors=authors)
     
     @app.route('/welcome')
@@ -139,7 +137,7 @@ def make_endpoints(app):
         }
 
         be = backend.Backend(app)
-        valid, data = be.sign_in(user_check)
+        valid, data = Back_end.sign_in(user_check)
         
         if not valid:
             return render_template('login.html', error='Incorrect Username and/or Password')
@@ -203,8 +201,7 @@ def make_endpoints(app):
             Boolean representing if the upload was successful or not.
 
         """
-        be = backend.Backend(app)
-        return be.upload(f, filename)
+        return Back_end.upload(f, filename)
 
     @app.route('/signup', methods=['GET'])
     def get_signup():
@@ -227,8 +224,7 @@ def make_endpoints(app):
             'password' : request.form.get('Password')
         }
 
-        be = backend.Backend(app)
-        valid, data = be.sign_up(new_user)
+        valid, data = Back_end.sign_up(new_user)
 
         if not valid:
             return render_template('signup.html', error='User already exists')
@@ -245,8 +241,7 @@ def make_endpoints(app):
 
         GET: Calls Backend and fetch images, sends user to the Images page where are images are displayed.
         """
-        be = backend.Backend(app)
-        image_lst = be.get_image()
+        image_lst = Back_end.get_image()
         return render_template('images.html', image_lst=image_lst)
         
     @app.errorhandler(405)

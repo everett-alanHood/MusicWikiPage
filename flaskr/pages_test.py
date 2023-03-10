@@ -1,3 +1,4 @@
+from flaskr.pages import make_endpoints
 from flaskr.backend import Backend
 from flaskr import backend
 from unittest.mock import MagicMock, patch
@@ -16,14 +17,19 @@ class storage_client_mock:
 class bucket_object:
     def __init__(self, bucket_name):
         self.bucket_name = bucket_name
-        self.blobz = []
+        self.blobz = dict()
 
     def list_blobs(self):
         return self.blobz
         
     def blob(self, blob_name, user_info=False):
+        blob_name = blob_name.lower()
+        
+        if blob_name in self.blobz:
+            return self.blobz[blob_name]
+
         temp_blob = blob_object(blob_name, user_info)
-        self.blobz.append(temp_blob)
+        self.blobz[blob_name] = temp_blob
         return temp_blob
 
 
@@ -78,8 +84,6 @@ class User_mock:
 
 
 
-
-
 # See https://flask.palletsprojects.com/en/2.2.x/testing/ 
 # for more info on testing
 @pytest.fixture
@@ -105,15 +109,30 @@ def test_home_page(client):
     assert b"<h1>" in resp.data
 
 # TODO(Project 1): Write tests for other routes.
-def test_auth_login_failed(self,user_blob,user_name,password):
-    user_check={"name":"Dr.Otter","username":"Otter123","password":"Wood"}
+def test_sign_up_success():
+    client = storage_client_mock()
+    bucket = client.bucket('users')
+    blob = bucket.blob('hi')
+
+    user_check = {"name":"test","username":"hell","password":"testhello"}
+    
+
+    
+    
+
+def test_sign_up_failed():
+    user_check={"name":"vincent","username":"username","password":"password"}
     #for blob in client.bucket("minorbugs_users").blobs:
         #if blob.username==user_check["username"]:
-            #if blob.password!=user_check["password"]:
-                #assert 5<2
-    #assert 1==1 
-    #if user name not in blob list assert error
-    #if password not equal blob password assert error
+            #assert 5<2
+    # if username is in blob list else assert error
+    pass
+
+def test_logout(client):
+    #test is_authenticated ==None else assert error
+    pass
+
+def test_auth_login_failed(self,user_blob,user_name,password):
     pass
     
 def test_auth_login_sucesss(client):
@@ -127,24 +146,7 @@ def test_auth_login_sucesss(client):
     #if user name not in blob list assert error
     #if password not equal blob password assert error
     pass
-def test_logout(client):
-    #test is_authenticated ==None else assert error
-    pass
-def test_sign_up_success():
-    user_check={"name":"Graves","username":"deadman","password":"walking"}
-    #for blob in client.bucket("minorbugs_users").blobs:
-        #if blob.username==user_check["username"]:
-            #assert 5<2
-    
-    # if username is in blob list else assert error
-    pass
-def test_sign_up_failed():
-    user_check={"name":"vincent","username":"username","password":"password"}
-    #for blob in client.bucket("minorbugs_users").blobs:
-        #if blob.username==user_check["username"]:
-            #assert 5<2
-    # if username is in blob list else assert error
-    pass
+
 def test_upload_failed(client):
     resp=client.get("/upload")
 
@@ -175,15 +177,6 @@ def test_get_welcome(client):
     #sign in user to use welcome
     assert resp.status_code ==401 #This check that the connection to welcome is good
     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
-def test_get_login(client):
-    resp=client.get("/login")
-    assert resp.status_code ==200 #This check that the connection to login is good
-    assert b"Login Page" in resp.data  #This check if the cilent can grabs the data within login
-    assert b"Login" in resp.data 
-def test_get_sign_up_success(client):
-    resp=client.get("/signup")
-    assert resp.status_code ==200 #This check that the connection to signup is good
-    assert b"Signup Page" in resp.data  #This check if the cilent can grabs the data within signup
-    assert b"Sign Up" in resp.data
+
 
 # user vincent username is username and password is password

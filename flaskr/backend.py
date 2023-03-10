@@ -140,7 +140,7 @@ class Backend:
         """
         storage_client = storage.Client()
         bucket = self.bucket_content
-        list(self.bucket_content.list_blobs())
+        
         blobs = list(self.bucket_content.list_blobs())
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
