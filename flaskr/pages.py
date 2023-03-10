@@ -9,6 +9,7 @@ from flaskext.markdown import Markdown
 
 
 def make_endpoints(app):
+    
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.session_protection = 'strong' 
@@ -98,8 +99,7 @@ def make_endpoints(app):
 
     @app.route('/upload', methods=['GET','POST'])
     @login_required
-    def upload(): 
-        #TODO doesn't properly route to the user's system 
+    def upload():
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
         #TODO A user should be able to upload .md files
         if request.method == 'POST':

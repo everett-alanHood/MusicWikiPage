@@ -40,10 +40,10 @@ class Backend:
 
     def get_all_page_names(self):
         """
-        Args:
-        Explain:
-        Returns:
-        Raises:
+        Args: Nothing
+        Explain: 
+        Returns: List of sub-page names
+        Raises: N/A
         """
         all_blobs = list(self.bucket_content.list_blobs())
         #Could add a feature where users upload their own content??
@@ -58,8 +58,13 @@ class Backend:
         return page_names
 
     def get_wiki_page(self, page_name):
+        """
+        Args: Sub-Page name
+        Explain: 
+        Returns:
+        Raises:
+        """
         md_blob = self.bucket_content.blob(f'{page_name}.md')
-
         md_path = f'flaskr/temp_markdown/{page_name}.md'
         html_path = f'flaskr/templates/{page_name}.html'
         
@@ -77,6 +82,13 @@ class Backend:
         return None
 
     def upload(self, content, filename):
+        """
+        Args:
+        Explain:
+        Returns:
+        Raises:
+        """
+        #print(os.path.basename(content.name))
         if filename.endswith('.md'):
             if not self.url_check(content, filename):
                 return False 
@@ -91,6 +103,12 @@ class Backend:
         return True
 
     def url_check(self, file_content, filename):
+        """
+        Args: Contents of a file, the filename
+        Explain:
+        Returns:
+        Raises:
+        """
         content = str(file_content.read())
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
 
@@ -102,6 +120,12 @@ class Backend:
         return True
 
     def get_image(self):
+        """
+        Args: Nothing
+        Explain:
+        Returns:
+        Raises:
+        """
         storage_client = storage.Client()
         bucket = self.bucket_content
         blobs = storage_client.list_blobs("minorbugs_content")
@@ -117,6 +141,12 @@ class Backend:
         return images_lst
     
     def get_about(self):
+        """
+        Args: Nothing
+        Explain:
+        Returns:
+        Raises:
+        """
         storage_client = storage.Client()
         blobs = storage_client.list_blobs("minorbugs_images")
         images_lst = []
@@ -131,6 +161,12 @@ class Backend:
         return images_lst
 
     def sign_up(self, user_info):
+        """
+        Args: A users info, Dict(name, username, password)
+        Explain:
+        Returns:
+        Raises:
+        """
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
 
@@ -149,6 +185,12 @@ class Backend:
         return True, name
 
     def sign_in(self, user_check):
+        """
+        Args: Users sign-in info Dict(username, password)
+        Explain:
+        Returns:
+        Raises:
+        """
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
         
@@ -167,36 +209,3 @@ class Backend:
             return False, 0
 
         return True, name
-
-
-"""
-    #Sign up
-    user_name = user_info['username']
-    user_blob = self.bucket_content.blob(f"{user_name}.txt' ")
-
-    if user_blob.exists():
-        return (False,)
-
-    name = user_info['name']
-    user_pass = user_info['username']
-
-    encoded = base64.b64encode(hashlib.sha256(user_pass.encode()).digest()
-    salt = bcrypt.gensalt()
-    hash_pass = hashpw(encoded, salt)
-
-    user_blob.upload_from_string(f"{name}\n{hash_pass}")
-    return (True, user_name)
-
-
-
-    #Writing to file
-    def write(self, bucket_name, blob_name, content):
-            storage_client = storage.Client()
-            bucket = storage_client.bucket(bucket_name)
-            blob = bucket.blob(blob_name)
-
-            with blob.open('w') as w:
-                w.write()
-
-            raise NotImplementedError
-"""
