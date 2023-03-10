@@ -29,7 +29,7 @@ class Backend:
         sub_pages: Set of all sub-pages to pages.html
         all_pages: All valid pages on the wiki (Union of pages and sub_pages)
     """
-    def __init__(self, app, storage_client = storage.client()):
+    def __init__(self, app, storage_client = storage.Client()):
         """
         Args: 
             An App from flask (ex. Flask(__name__) )
