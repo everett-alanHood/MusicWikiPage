@@ -46,19 +46,39 @@ def valid_user():
     user_info['password'] = "su4wirf-"
     return user_info
 
+@pytest.fixture
+def invalid_user():
+    user_info = {}
+    user_info['username'] = "invalid_name"
+    user_info['username'] = "invalid_username"
+    user_info['password'] = "invalid_password"
+    return user_info
+
 # TODO(Project 1): Write tests for Backend methods.
-def test_sign_in_failed(bucket,user_name,password):
-    pass
+def test_sign_in_failed(valid_user,invalid_user):
+    be = Backend(app)
+    valid_user['password'] = "somethingElse"
+    incorrect_password = be.sign_in(valid_user)
+    invalid_user['username'] = "somethingElse"
+    unknown_user = be.sign_in(invalid_user)
+    assert incorrect_password[0] == False and unknown_user[0] == False
     
 def test_sign_in_sucesss(valid_user):
     be = Backend(app)
     result = be.sign_in(valid_user)
     assert result[0] == True
 
-def test_sign_up_failed(username,password):
-    pass
-def test_sign_up_success(username,password):
-    pass
+def test_sign_up_failed(valid_user):
+    be = Backend(app)
+    known_user = be.sign_up(valid_user)
+    assert known_user[0] == False
+
+def test_sign_up_success(invalid_user):
+    #TODO doesn't sign in the new user correctly
+    be = Backend(app)
+    unknown_user = be.sign_up(invalid_user)
+    assert unknown_user[0] == True
+
 def test_upload_failed(file_failed):
     be = Backend(app)
     val = be.upload(file_failed,file_failed.name)
