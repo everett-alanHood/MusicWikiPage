@@ -215,7 +215,7 @@ def make_endpoints(app):
         return render_template('signup.html')
 
     @app.route('/auth_signup', methods=['POST'])
-    def sign_up():
+    def sign_up(load_user = load_user):
         """When response is POST it takes the name, username, password information in the form and passes it on to the Backend to confirm if valid.
         If valid, it logins the user and redirects it to the Welcome page, else: it returns an error and the same page.
 

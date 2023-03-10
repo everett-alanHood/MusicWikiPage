@@ -11,6 +11,7 @@ class storage_client_mock:
 
     def bucket(self, bucket_name):
       return bucket_object(bucket_name)
+  
     
 class bucket_object:
     def __init__(self, bucket_name):
@@ -24,6 +25,7 @@ class bucket_object:
         temp_blob = blob_object(blob_name, user_info)
         self.blobz.append(temp_blob)
         return temp_blob
+
 
 class blob_object:
     def __init__(self, blob_name, user_info = False):
@@ -50,6 +52,11 @@ class blob_object:
 
     def download_to_filename(self, file_path):
         return self.file_content
+
+
+def load_user_mock(data):
+    mock_user = User_mock(data)
+    return mock_user
 
 
 class User_mock:
