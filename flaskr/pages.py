@@ -144,7 +144,6 @@ def make_endpoints(app):
         if not valid:
             return render_template('login.html', error='Incorrect Username and/or Password')
         
-        print(data)
         user = load_user(data)
         login_user(user)
 

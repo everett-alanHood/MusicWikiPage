@@ -2,8 +2,74 @@ from flaskr.backend import Backend
 from flaskr import backend
 from unittest.mock import MagicMock, patch
 from flaskr import create_app
-
 import pytest
+
+
+class storage_client_mock:
+    def __init__(self, app_mock=None):
+        pass
+
+    def bucket(self, bucket_name):
+      return bucket_object(bucket_name)
+    
+class bucket_object:
+    def __init__(self, bucket_name):
+        self.bucket_name = bucket_name
+        self.blobz = []
+
+    def list_blobs(self):
+        return self.blobz
+        
+    def blob(self, blob_name, user_info=False):
+        temp_blob = blob_object(blob_name, user_info)
+        self.blobz.append(temp_blob)
+        return temp_blob
+
+class blob_object:
+    def __init__(self, blob_name, user_info = False):
+        self.name = blob_name
+        self.info = user_info
+
+    def exists(self):
+        if self.info:
+            return True
+        else:
+            return False
+
+    def set_public_url(self, url_name):
+        self.public_url = url_name
+
+    def upload_from_string(self, content):
+        self.string_content = content
+
+    def download_as_string(self, content):
+        return self.string_content
+
+    def upload_from_file(self, content):
+        self.file_content = content
+
+    def download_to_filename(self, file_path):
+        return self.file_content
+
+
+class User_mock:
+    def __init__(self, name):
+        self.name = name
+        self.id = 10
+
+    def get_id(self):
+        return self.id
+
+    def is_authenticated(self):
+        return True
+        
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+
 
 
 

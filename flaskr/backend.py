@@ -140,8 +140,9 @@ class Backend:
         """
         storage_client = storage.Client()
         bucket = self.bucket_content
-        blobs = storage_client.list_blobs("minorbugs_content")
-        blobs = storage_client.list_blobs("minorbugs_images")
+        list(self.bucket_content.list_blobs())
+        blobs = list(self.bucket_content.list_blobs())
+        blobs = list(self.bucket_images.list_blobs())
         images_lst = []
 
         for blob in blobs:
@@ -161,7 +162,7 @@ class Backend:
         Returns: List of image urls and author names (List)
         """
         storage_client = storage.Client()
-        blobs = storage_client.list_blobs("minorbugs_images")
+        blobs = list(self.bucket_images.list_blobs())
         images_lst = []
         for blob in blobs:
             if blob.name.startswith("[Author]"):
