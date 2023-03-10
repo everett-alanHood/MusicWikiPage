@@ -173,18 +173,22 @@ def make_endpoints(app):
             uploaded_file = request.files['upload']
             filename = os.path.basename(uploaded_file.filename)
             print("FILENAME",filename)
+            file_end=filename.split(".")[-1].lower()
             #case where the file is an image
-            if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
+
+            #if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
+            if file_end =="jpeg" or file_end =="jpg" or file_end =="png" or file_end =="md":
                 uploadImage(uploaded_file, filename)
                 return redirect(url_for("home"))
             #case where the file is a zip
             elif filename.endswith('.zip'):
                 with zipfile.ZipFile(uploaded_file, 'r') as z:
                     for zipped_image in z.namelist():
+                        zip_end=zipped_image.split(".")[-1].lower()
                         #upload the files that are images only
                         if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png'):
                             uploadImage(z.open(zipped_image), zipped_image)
-                            print("FILENAME",zipped_image)
+                            print("FILENAME\nrfeionffoij",zipped_image)
                 return redirect(url_for("home"))
             else:
                 render_template('upload.html', error='Incorrect File Type')

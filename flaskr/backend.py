@@ -102,12 +102,15 @@ class Backend:
                  to a google cloud bucket (Content or Images)
         Returns: (Boolean)
         """
-        if filename.endswith('.md'):
+        file_end=filename.split(".")[-1].lower()
+        #if filename.endswith('.md'):
+        if file_end =="md":
             if not self.url_check(content, filename):
                 return False 
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
-        elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
+        elif file_end =="jpeg" or file_end =="jpg" or file_end =="png":
+        #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
         else:
             return False
@@ -138,9 +141,8 @@ class Backend:
                  buckets (Content and Images), excluding authors.
         Returns: List of image urls (List)
         """
-        storage_client = storage.Client()
-        bucket = self.bucket_content
-        list(self.bucket_content.list_blobs())
+        #storage_client = storage.Client()
+        #bucket = self.bucket_content
         blobs = list(self.bucket_content.list_blobs())
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
