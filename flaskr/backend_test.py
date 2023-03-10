@@ -146,31 +146,33 @@ def invalid_user():
     return user_info
 
 def test_sign_in_failed(valid_user,invalid_user):
-    be = Backend(app)
-    valid_user['password'] = "somethingElse"
-    incorrect_password = be.sign_in(valid_user)
-    invalid_user['username'] = "somethingElse"
-    unknown_user = be.sign_in(invalid_user)
-    assert incorrect_password[0] == False and unknown_user[0] == False
+    back_end = Backend('app', SC=storage_client_mock())
+    back_end.sign_up(valid_user)
+    valid, data = back_end.sign_in(invalid_user)
+    assert valid == False
+    assert data == ""
     
 def test_sign_in_sucesss(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
-    back_end.sign_up(valid_user())
-    valid, data = back_end.sign_in(valid_user())
+    back_end.sign_up(valid_user)
+    valid, data = back_end.sign_in(valid_user)
     assert valid == True
     assert data == "Everett-Alan"
 
 
 def test_sign_up_failed(valid_user):
-    be = Backend(app)
-    known_user = be.sign_up(valid_user)
-    assert known_user[0] == False
+    back_end = Backend('app', SC=storage_client_mock())
+    back_end.sign_up(valid_user)
+    valid, data = back_end.sign_up(valid_user)
+    assert valid == False
+    assert data == ""
+    
 
-def test_sign_up_success(invalid_user):
-    #TODO doesn't sign in the new user correctly
-    be = Backend(app)
-    unknown_user = be.sign_up(invalid_user)
-    assert unknown_user[0] == True
+def test_sign_up_success(valid_user):
+    back_end = Backend('app', SC=storage_client_mock())
+    valid, data = back_end.sign_up(valid_user) #hi
+    assert valid == True
+    assert data == "Everett-Alan"
 
 def test_upload_failed(file_failed):
     be = Backend(app)
