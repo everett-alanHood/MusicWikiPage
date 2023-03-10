@@ -23,7 +23,7 @@ def file_failed():
     file.name.endswith.return_value = False
     file.endswith = lambda x: file.name.endswith(x)
     file.read.return_value = "text in text"
-    
+
 
     return file
 
@@ -38,12 +38,23 @@ def file_success():
     file.read.return_value = "File Sucess"
     return file
 
+@pytest.fixture
+def valid_user():
+    user_info = {}
+    user_info['name'] = "Everett-Alan"
+    user_info['username'] = "tim3line"
+    user_info['password'] = "su4wirf-"
+    return user_info
+
 # TODO(Project 1): Write tests for Backend methods.
 def test_sign_in_failed(bucket,user_name,password):
     pass
     
-def test_sign_in_sucesss(username,password):
-    pass
+def test_sign_in_sucesss(valid_user):
+    be = Backend(app)
+    result = be.sign_in(valid_user)
+    assert result[0] == True
+
 def test_sign_up_failed(username,password):
     pass
 def test_sign_up_success(username,password):
