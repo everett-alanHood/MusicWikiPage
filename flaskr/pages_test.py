@@ -44,14 +44,19 @@ def test_about():
     pass
 def test_welcome():
     pass
+
 def test_get_login():
     pass
+
 def test_upload():
     pass
+
 def test_get_sign_up_failed():
     pass
+
 def test_get_sign_up_success():
     pass
+
 def test_sign_up_success():
     pass
 def test_sign_up_failed():

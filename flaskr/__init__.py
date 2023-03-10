@@ -1,7 +1,5 @@
 from flaskr import pages
-
 from flask import Flask
-
 import logging
 logging.basicConfig(level=logging.DEBUG)
 

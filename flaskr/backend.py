@@ -10,12 +10,20 @@ import os
 import markdown
 import re
 
-
-# TODO(Project 1): Implement Backend according to the requirements.
+"""
+Args:
+Explain:
+Returns:
+Raises:
+"""
 class Backend:
-    
     def __init__(self, app):
-        #Used for logging in/out
+        """
+        Args: An App from flask (ex. Flask(__name__) )
+        Initializes and creates neccessary attributes for backend
+        Returns: Nothing
+        Raises: N/A
+        """
         test_app = Flask(__name__)
         self.login_manager = LoginManager()
         self.login_manager.init_app(test_app)
@@ -29,9 +37,16 @@ class Backend:
         self.sub_pages = {'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
         self.all_pages = self.pages | self.sub_pages
 
+
     def get_all_page_names(self):
+        """
+        Args:
+        Explain:
+        Returns:
+        Raises:
+        """
         all_blobs = list(self.bucket_content.list_blobs())
-        #Could add a feature where users can upload their own content??
+        #Could add a feature where users upload their own content??
 
         page_names = []
         for blob in all_blobs:
@@ -59,20 +74,18 @@ class Backend:
         with open(html_path, 'w') as f:
             f.write(html_header)
         
-        # md_content = md_blob.download_as_string().decode('utf-8')
-        # html_content = markdown(md_content)
-        # return html_content
+        return None
 
     def upload(self, content, filename):
-        print(os.path.basename(content.name))
-
         if filename.endswith('.md'):
             if not self.url_check(content, filename):
                 return False 
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
-        else:
+        elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
+        else:
+            return False
         
         blob.upload_from_file(content)
         return True
@@ -100,7 +113,7 @@ class Backend:
                 continue
             blob_img = blob.public_url
             images_lst.append(blob_img)
-        
+        images_lst.sort()
         return images_lst
     
     def get_about(self):
