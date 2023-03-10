@@ -4,11 +4,18 @@ import pytest
 
 class storage_client_mock:
     def __init__(self, app_mock=None):
-        
-        pass
+        self.bucketz = dict()
 
-    def bucket(self, bucket_name='test'):
-      return bucket_object(bucket_name)
+    def list_buckets(self):
+        return self.bucketz
+
+    def bucket(self, bucket_name):
+        if bucket_name in self.bucketz:
+            return self.bucketz[bucket_name]
+        
+        temp_bucket = bucket_object(bucket_name)
+        self.bucketz[bucket_name] = temp_bucket
+        return temp_bucket
 
 
 class bucket_object:
@@ -19,49 +26,48 @@ class bucket_object:
     def list_blobs(self):
         return self.blobz
         
-    def blob(self, blob_name, user_info=False):
+    def blob(self, blob_name):
         blob_name = blob_name.lower()
 
         if blob_name in self.blobz:
             return self.blobz[blob_name]
 
-        temp_blob = blob_object(blob_name, user_info)
+        temp_blob = blob_object(blob_name)
         self.blobz[blob_name] = temp_blob
         return temp_blob
 
 
 class blob_object:
-    def __init__(self, blob_name, user_info = False):
+    def __init__(self, blob_name):
         self.name = blob_name
-        self.info = user_info
+        self.public_url = False
 
     def exists(self):
-        if self.info:
-            return True
+        if not self.public_url:
+          return False
         else:
-            return False
+          return True   
 
     def _set_public_url(self, url_name):
         self.public_url = url_name
 
     def upload_from_string(self, content):
+        self.public_url = 'test/test.com'
         self.string_content = content
 
-    def download_as_string(self, content):
-        self.public_url = 'test/test.com'
-        return self.string_content
+    def download_as_string(self):
+        return self.string_content.encode('utf-8')
 
     def upload_from_file(self, content):
+        self.public_url = 'test/test.com'
         self.file_content = content
 
-    def download_to_filename(self, file_path):
+    def download_to_filename(self):
         return self.file_content
-
 
 def load_user_mock(data):
     mock_user = User_mock(data)
     return mock_user
-
 
 class User_mock:
     def __init__(self, name):
@@ -148,16 +154,12 @@ def test_sign_in_failed(valid_user,invalid_user):
     assert incorrect_password[0] == False and unknown_user[0] == False
     
 def test_sign_in_sucesss(valid_user):
-    back_end = Backend(app, SC=storage_client_mock)
+    back_end = Backend('app', SC=storage_client_mock())
     back_end.sign_up(valid_user())
     valid, data = back_end.sign_in(valid_user())
     assert valid == True
     assert data == "Everett-Alan"
 
-
-    # be = Backend(app)
-    # result = be.sign_in(valid_user)
-    # assert result[0] == True
 
 def test_sign_up_failed(valid_user):
     be = Backend(app)
