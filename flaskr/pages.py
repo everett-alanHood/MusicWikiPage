@@ -136,7 +136,7 @@ def make_endpoints(app, Backend=Backend):
             'password' : request.form.get('Password')
         }
 
-        be = backend.Backend(app)
+        #be = backend.Backend(app)
         valid, data = Back_end.sign_in(user_check)
         
         if not valid:
