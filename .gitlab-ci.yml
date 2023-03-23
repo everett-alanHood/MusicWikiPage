@@ -1,6 +1,6 @@
 image: python:3
 lint:
- stage: test
+ stage: build
  script:
  - pip install yapf==0.32.0
  - yapf --recursive . --style google
