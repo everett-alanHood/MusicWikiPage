@@ -19,8 +19,8 @@ def make_endpoints(app, Backend=Backend):
 
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.session_protection = 'strong' 
-    Markdown(app)   
+    login_manager.session_protection = 'strong'
+    Markdown(app)
     Back_end = Backend(app)
 
     class User(UserMixin):
@@ -33,6 +33,7 @@ def make_endpoints(app, Backend=Backend):
             id: UUID identifier for the user
             
         """
+
         def __init__(self, name):
             """Initializes the User object with the name passed as parameter and assigns it an UUID.
 
@@ -42,13 +43,13 @@ def make_endpoints(app, Backend=Backend):
             #TODO Doesnt display full name, but instead the id, fixit
             self.name = f'{name}'
             self.id = f'{uuid.uuid4()}'
-        
+
         def get_id(self):
             return self.id
 
         def is_authenticated(self):
             return True
-        
+
         def is_active(self):
             return True
 
@@ -65,7 +66,7 @@ def make_endpoints(app, Backend=Backend):
         """
         user = User(name)
         return user
-    
+
     @app.route('/')
     # @app.route('/main')
     def home():
@@ -94,7 +95,7 @@ def make_endpoints(app, Backend=Backend):
         """
         Back_end.get_wiki_page(sub_page)
         # html_content = be.get_wiki_page(sub_page)
-        return render_template(f'{sub_page}.html')#, content=html_content)
+        return render_template(f'{sub_page}.html')  #, content=html_content)
 
     @app.route('/about')
     def about():
@@ -104,7 +105,7 @@ def make_endpoints(app, Backend=Backend):
         """
         authors = Back_end.get_about()
         return render_template('about.html', authors=authors)
-    
+
     @app.route('/welcome')
     @login_required
     def welcome():
@@ -113,7 +114,7 @@ def make_endpoints(app, Backend=Backend):
         GET: Welcome page
         """
         return render_template('welcome.html')
-        
+
     @app.route('/login', methods=['GET'])
     def get_login():
         """Returns the login page.
@@ -132,16 +133,17 @@ def make_endpoints(app, Backend=Backend):
         """
 
         user_check = {
-            'username' : request.form.get('Username'),
-            'password' : request.form.get('Password')
+            'username': request.form.get('Username'),
+            'password': request.form.get('Password')
         }
 
         #be = backend.Backend(app)
         valid, data = Back_end.sign_in(user_check)
-        
+
         if not valid:
-            return render_template('login.html', error='Incorrect Username and/or Password')
-        
+            return render_template('login.html',
+                                   error='Incorrect Username and/or Password')
+
         user = load_user(data)
         login_user(user)
 
@@ -157,9 +159,9 @@ def make_endpoints(app, Backend=Backend):
         logout_user()
         return redirect('/')
 
-    @app.route('/upload', methods=['GET','POST'])
+    @app.route('/upload', methods=['GET', 'POST'])
     @login_required
-    def upload(): 
+    def upload():
         """When there is a POST response it takes the uploaded file/s, processes it, checks for validity and sents it to the Backend,
         where it will be store in the appropiate GCS bucket depending on the type of content it is. (images or markdowns)
 
@@ -170,23 +172,25 @@ def make_endpoints(app, Backend=Backend):
         if request.method == 'POST':
             uploaded_file = request.files['upload']
             filename = os.path.basename(uploaded_file.filename)
-            print("FILENAME",filename)
-            file_end=filename.split(".")[-1].lower()
+            print("FILENAME", filename)
+            file_end = filename.split(".")[-1].lower()
             #case where the file is an image
 
             #if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
-            if file_end =="jpeg" or file_end =="jpg" or file_end =="png" or file_end =="md":
+            if file_end == "jpeg" or file_end == "jpg" or file_end == "png" or file_end == "md":
                 uploadImage(uploaded_file, filename)
                 return redirect(url_for("home"))
             #case where the file is a zip
             elif filename.endswith('.zip'):
                 with zipfile.ZipFile(uploaded_file, 'r') as z:
                     for zipped_image in z.namelist():
-                        zip_end=zipped_image.split(".")[-1].lower()
+                        zip_end = zipped_image.split(".")[-1].lower()
                         #upload the files that are images only
-                        if zipped_image.endswith('.jpg') or zipped_image.endswith('.jpeg') or zipped_image.endswith('.png'):
+                        if zipped_image.endswith(
+                                '.jpg') or zipped_image.endswith(
+                                    '.jpeg') or zipped_image.endswith('.png'):
                             uploadImage(z.open(zipped_image), zipped_image)
-                            print("FILENAME\nrfeionffoij",zipped_image)
+                            print("FILENAME\nrfeionffoij", zipped_image)
                 return redirect(url_for("home"))
             else:
                 render_template('upload.html', error='Incorrect File Type')
@@ -216,28 +220,28 @@ def make_endpoints(app, Backend=Backend):
         return render_template('signup.html')
 
     @app.route('/auth_signup', methods=['POST'])
-    def sign_up(load_user = load_user):
+    def sign_up(load_user=load_user):
         """When response is POST it takes the name, username, password information in the form and passes it on to the Backend to confirm if valid.
         If valid, it logins the user and redirects it to the Welcome page, else: it returns an error and the same page.
 
         POST: Passes form to Backend and confirms login, redirects to Welcome page.
         """
         new_user = {
-            'name'     : request.form.get('Name'),
-            'username' : request.form.get('Username'),
-            'password' : request.form.get('Password')
+            'name': request.form.get('Name'),
+            'username': request.form.get('Username'),
+            'password': request.form.get('Password')
         }
 
         valid, data = Back_end.sign_up(new_user)
 
         if not valid:
             return render_template('signup.html', error='User already exists')
-        
+
         user = load_user(data)
         login_user(user)
 
         return redirect(url_for('welcome'))
-        
+
     @app.route('/images', methods=['GET', 'POST'])
     def get_allimages():
         """It uses the Backend to look for all images in the GCS image bucket and returns a list of links to each one.
@@ -247,7 +251,7 @@ def make_endpoints(app, Backend=Backend):
         """
         image_lst = Back_end.get_image()
         return render_template('images.html', image_lst=image_lst)
-        
+
     @app.errorhandler(405)
     def invalid_method(error):
         """Error handler that manages all the pages error and forwards the user to the initial page.

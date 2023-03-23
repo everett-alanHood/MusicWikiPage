@@ -2,7 +2,9 @@ from flaskr.backend import Backend
 from unittest.mock import MagicMock, patch
 import pytest
 
+
 class storage_client_mock:
+
     def __init__(self, app_mock=None):
         self.bucketz = dict()
 
@@ -12,20 +14,21 @@ class storage_client_mock:
     def bucket(self, bucket_name):
         if bucket_name in self.bucketz:
             return self.bucketz[bucket_name]
-        
+
         temp_bucket = bucket_object(bucket_name)
         self.bucketz[bucket_name] = temp_bucket
         return temp_bucket
 
 
 class bucket_object:
+
     def __init__(self, bucket_name):
         self.bucket_name = bucket_name
         self.blobz = dict()
 
     def list_blobs(self):
         return self.blobz
-        
+
     def blob(self, blob_name):
         blob_name = blob_name.lower()
 
@@ -38,15 +41,16 @@ class bucket_object:
 
 
 class blob_object:
+
     def __init__(self, blob_name):
         self.name = blob_name
         self.public_url = False
 
     def exists(self):
         if not self.public_url:
-          return False
+            return False
         else:
-          return True   
+            return True
 
     def _set_public_url(self, url_name):
         self.public_url = url_name
@@ -65,11 +69,14 @@ class blob_object:
     def download_to_filename(self):
         return self.file_content
 
+
 def load_user_mock(data):
     mock_user = User_mock(data)
     return mock_user
 
+
 class User_mock:
+
     def __init__(self, name):
         self.name = name
         self.id = 10
@@ -79,14 +86,16 @@ class User_mock:
 
     def is_authenticated(self):
         return True
-        
+
     def is_active(self):
         return True
 
     def is_anonymous(self):
         return False
 
+
 class Flask_mock:
+
     def __init__(self, name):
         pass
 
@@ -98,14 +107,17 @@ def app():
     })
     return app
 
+
 @pytest.fixture
 def page_name():
     name = "chord"
     return name
 
+
 @pytest.fixture
 def client(app):
     return app.test_client()
+
 
 @pytest.fixture
 def file_failed():
@@ -118,6 +130,7 @@ def file_failed():
 
     return file
 
+
 @pytest.fixture
 def file_success():
     file = MagicMock()
@@ -129,6 +142,7 @@ def file_success():
     file.read.return_value = "File Sucess"
     return file
 
+
 @pytest.fixture
 def valid_user():
     user_info = {}
@@ -136,6 +150,7 @@ def valid_user():
     user_info['username'] = "tim3line"
     user_info['password'] = "su4wirf-"
     return user_info
+
 
 @pytest.fixture
 def invalid_user():
@@ -145,13 +160,15 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
-def test_sign_in_failed(valid_user,invalid_user):
+
+def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', SC=storage_client_mock())
     back_end.sign_up(valid_user)
     valid, data = back_end.sign_in(invalid_user)
     assert valid == False
     assert data == ""
-    
+
+
 def test_sign_in_sucesss(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
     back_end.sign_up(valid_user)
@@ -166,18 +183,20 @@ def test_sign_up_failed(valid_user):
     valid, data = back_end.sign_up(valid_user)
     assert valid == False
     assert data == ""
-    
+
 
 def test_sign_up_success(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
-    valid, data = back_end.sign_up(valid_user) #hi
+    valid, data = back_end.sign_up(valid_user)  #hi
     assert valid == True
     assert data == "Everett-Alan"
 
+
 def test_upload_failed(file_failed):
     be = Backend(app)
-    val = be.upload(file_failed,file_failed.name)
+    val = be.upload(file_failed, file_failed.name)
     assert val == False
+
 
 def test_upload_sucess(file_success):
     be = Backend(app)
@@ -185,23 +204,44 @@ def test_upload_sucess(file_success):
         val = be.upload(file_success, file_success.name)
     assert val == True
 
+
 def test_get_all_pages_names():
     be = Backend(app)
     test_string = 'chord'
-    with patch.object(be, 'get_all_page_names', return_value=['chord', 'dynamics', 'form', 'harmony', 'melody', 'pitch', 'rhythm', 'scales', 'test_url', 'texture', 'timbre']):
+    with patch.object(be,
+                      'get_all_page_names',
+                      return_value=[
+                          'chord', 'dynamics', 'form', 'harmony', 'melody',
+                          'pitch', 'rhythm', 'scales', 'test_url', 'texture',
+                          'timbre'
+                      ]):
         pages = be.get_all_page_names()
     assert test_string in pages
 
+
 def test_get_wiki_page(page_name):
     be = Backend(app)
-    with patch.object(be, 'get_wiki_page', return_value="{% include 'header.html' %}<p><h2>Chord</h2>Chord is a set of harmonic notes that are played simultaneously.</p>"):
+    with patch.object(
+            be,
+            'get_wiki_page',
+            return_value=
+            "{% include 'header.html' %}<p><h2>Chord</h2>Chord is a set of harmonic notes that are played simultaneously.</p>"
+    ):
         pages = be.get_wiki_page(page_name)
     assert "<h2>Chord</h2>" in pages
+
 
 def test_get_image():
     be = Backend(app)
     images = 'https://storage.googleapis.com/minorbugs_images/Mozart.jpg'
-    with patch.object(be, 'get_image', return_value="['https://storage.googleapis.com/minorbugs_images/HarmonyTheory.png', 'https://storage.googleapis.com/minorbugs_images/Mozart.jpg', 'https://storage.googleapis.com/minorbugs_images/MusicTheoryNotes.png', 'https://storage.googleapis.com/minorbugs_images/MusicalNotes.jpg']"):
+    with patch.object(
+            be,
+            'get_image',
+            return_value=
+            "['https://storage.googleapis.com/minorbugs_images/HarmonyTheory.png', 'https://storage.googleapis.com/minorbugs_images/Mozart.jpg', 'https://storage.googleapis.com/minorbugs_images/MusicTheoryNotes.png', 'https://storage.googleapis.com/minorbugs_images/MusicalNotes.jpg']"
+    ):
         backend_images = be.get_image()
     assert images in backend_images
+
+
 #test username:test password:test
