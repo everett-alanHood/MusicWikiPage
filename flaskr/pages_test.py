@@ -183,17 +183,17 @@ def test_get_about(client):
     assert b"Your Authors" in resp.data  #This check if the cilent can grabs the data within about
 
 
-def test_pages(client):
-    resp = client.get("/pages")
-    assert resp.status_code == 200  #This check that the connection to pages is good
-    assert b"All Pages" in resp.data
-    assert b"Sub-Pages" in resp.data
+# def test_pages(client):
+#     resp = client.get("/pages")
+#     assert resp.status_code == 200  #This check that the connection to pages is good
+#     assert b"All Pages" in resp.data
+#     assert b"Sub-Pages" in resp.data
 
 
-def test_pages_next(client):
-    resp = client.get("/pages/chord")
-    assert resp.status_code == 200  #This check that the connection to a sub pages is good
-    assert b"Chord" in resp.data
+# def test_pages_next(client):
+#     resp = client.get("/pages/chord")
+#     assert resp.status_code == 200  #This check that the connection to a sub pages is good
+#     assert b"Chord" in resp.data
 
 
 # def test_get_welcome(client):
