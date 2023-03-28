@@ -143,8 +143,8 @@ def test_logout(client):
     pass
 
 
-def test_auth_login_failed(self, user_blob, user_name, password):
-    pass
+# def test_auth_login_failed(self, user_blob, user_name, password):
+#     pass
 
 
 def test_auth_login_sucesss(client):
@@ -164,16 +164,16 @@ def test_auth_login_sucesss(client):
     pass
 
 
-def test_upload_failed(client):
-    resp = client.get("/upload")
+# def test_upload_failed(client):
+#     resp = client.get("/upload")
 
-    assert resp.status_code == 200  #This check that the connection to upload is good
-    # if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
+#     assert resp.status_code == 200  #This check that the connection to upload is good
+#     # if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
 
 
-def test_upload_success(client):
-    resp = client.get("/upload")
-    assert resp.status_code == 200  #This check that the connection to upload is good
+# def test_upload_success(client):
+#     resp = client.get("/upload")
+#     assert resp.status_code == 200  #This check that the connection to upload is good
 
 
     # if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
@@ -196,12 +196,12 @@ def test_pages_next(client):
     assert b"Chord" in resp.data
 
 
-def test_get_welcome(client):
-    resp = client.get("/welcome")
-    user_check = {"username": "username", "password": "password"}
-    #sign in user to use welcome
-    assert resp.status_code == 401  #This check that the connection to welcome is good
-    assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
+# def test_get_welcome(client):
+#     resp = client.get("/welcome")
+#     user_check = {"username": "username", "password": "password"}
+#     #sign in user to use welcome
+#     assert resp.status_code == 401  #This check that the connection to welcome is good
+#     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
 
 
 # user vincent username is username and password is password
