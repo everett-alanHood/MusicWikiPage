@@ -1,4 +1,4 @@
-bcrypt==4.1.0
+bcrypt==4.0.1
 Markdown==3.4.1
 Flask==2.1.0
 Flask-Login==0.6.2
