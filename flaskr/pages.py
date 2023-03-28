@@ -5,7 +5,7 @@ from google.cloud import storage
 import os
 import uuid
 import zipfile
-from flaskext.markdown import Markdown
+from flask.ext.markdown import Markdown
 
 
 def make_endpoints(app, Backend=Backend):
