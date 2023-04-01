@@ -93,9 +93,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        Back_end.get_wiki_page(sub_page)
-        # html_content = be.get_wiki_page(sub_page)
-        return render_template(f'{sub_page}.html')  #, content=html_content)
+        html_content = Back_end.get_wiki_page(sub_page)
+        return render_template(f'{sub_page}.html', content=html_content)
 
     @app.route('/about')
     def about():
