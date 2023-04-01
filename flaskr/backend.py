@@ -2,20 +2,21 @@ from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 #Hasing password
-import bcrypt #gensalt, hashpw, checkpw
+import bcrypt  #gensalt, hashpw, checkpw
 import base64
 import hashlib
 import os
 # from markdown import markdown
 import markdown
 import re
-
 """
 Args:
 Explain:
 Returns:
 Raises:
 """
+
+
 class Backend:
     """
     Explain
@@ -29,7 +30,8 @@ class Backend:
         sub_pages: Set of all sub-pages to pages.html
         all_pages: All valid pages on the wiki (Union of pages and sub_pages)
     """
-    def __init__(self, app, SC = storage.Client()):
+
+    def __init__(self, app, SC=storage.Client()):
         """
         Args: 
             An App from flask (ex. Flask(__name__) )
@@ -45,10 +47,15 @@ class Backend:
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
         #page urls
-        self.pages = {'/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload', 'signup', 'images'}
-        self.sub_pages = {'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre', 'form', 'dynamics', 'texture'}
+        self.pages = {
+            '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
+            'signup', 'images'
+        }
+        self.sub_pages = {
+            'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre',
+            'form', 'dynamics', 'texture'
+        }
         self.all_pages = self.pages | self.sub_pages
-
 
     def get_all_page_names(self):
         """
@@ -67,7 +74,7 @@ class Backend:
             name = blob.name.split('.')
             if name[0] in self.sub_pages and name[-1] == 'md':
                 page_names.append(name[0])
-        
+
         page_names.sort()
         return page_names
 
@@ -81,18 +88,20 @@ class Backend:
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_path = f'flaskr/temp_markdown/{page_name}.md'
         html_path = f'flaskr/templates/{page_name}.html'
-        
+
         md_blob.download_to_filename(md_path)
-        markdown.markdownFromFile(input=md_path, output=html_path, encoding='utf-8')
-        
+        markdown.markdownFromFile(input=md_path,
+                                  output=html_path,
+                                  encoding='utf-8')
+
         with open(html_path, 'r') as f:
-            html_content = f.read()           
-        
+            html_content = f.read()
+
         html_header = "{% include 'header.html' %}" + html_content
-    
+
         with open(html_path, 'w') as f:
             f.write(html_header)
-        
+
         return None
 
     def upload(self, content, filename):
@@ -102,19 +111,19 @@ class Backend:
                  to a google cloud bucket (Content or Images)
         Returns: (Boolean)
         """
-        file_end=filename.split(".")[-1].lower()
+        file_end = filename.split(".")[-1].lower()
         #if filename.endswith('.md'):
-        if file_end =="md":
+        if file_end == "md":
             if not self.url_check(content, filename):
-                return False 
+                return False
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
-        elif file_end =="jpeg" or file_end =="jpg" or file_end =="png":
-        #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
+        elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
+            #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
         else:
             return False
-        
+
         blob.upload_from_file(content)
         return True
 
@@ -128,9 +137,11 @@ class Backend:
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
 
         for url in check_urls:
-            if url[1][1:] in self.all_pages:pass
-            elif url[1][2:] in self.all_pages:pass
-            else: 
+            if url[1][1:] in self.all_pages:
+                pass
+            elif url[1][2:] in self.all_pages:
+                pass
+            else:
                 return False
         return True
 
@@ -155,7 +166,7 @@ class Backend:
 
         images_lst.sort()
         return images_lst
-    
+
     def get_about(self):
         """
         Args: Nothing
@@ -210,10 +221,10 @@ class Backend:
         """
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
-        
+
         if not user_blob.exists():
             return False, ''
-        
+
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
