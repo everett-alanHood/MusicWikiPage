@@ -159,20 +159,19 @@ def test_sign_in_sucesss(valid_user):
     assert valid == True
     assert data == "Everett-Alan"
 
-
 def test_sign_up_failed(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
     back_end.sign_up(valid_user)
     valid, data = back_end.sign_up(valid_user)
     assert valid == False
     assert data == ""
-    
 
 def test_sign_up_success(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
-    valid, data = back_end.sign_up(valid_user) #hi
+    valid, data = back_end.sign_up(valid_user)
     assert valid == True
     assert data == "Everett-Alan"
+
 
 def test_upload_failed(file_failed):
     be = Backend(app)
