@@ -9,6 +9,7 @@ import os
 # from markdown import markdown
 import markdown
 import re
+from collections import deque
 """
 Args:
 Explain:
@@ -46,6 +47,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
+        self.bucket_users.bucket_history = storage_client.bucket('user_history')        
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -57,6 +59,14 @@ class Backend:
         }
         self.all_pages = self.pages | self.sub_pages
 
+    def get_history(self):
+        # blobs = list(self.bucket_users.bucket_history.list_blob())
+        # user_history = deque()
+        
+        # for page in blobs:
+        #     user_history.append(str(page))
+        return ["test"]
+    
     def get_all_page_names(self):
         """
         Args: 
