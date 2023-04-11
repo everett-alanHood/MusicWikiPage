@@ -196,6 +196,23 @@ def make_endpoints(app, Backend=Backend):
 
         return render_template('upload.html')
 
+    @app.route('/comments', methods=['GET','POST'])
+    @login_required
+    def comments_page():
+        comment_list = Back_end.get_comments()
+        if request.method == 'POST':
+            message = request.form.get("comment")
+            if not message:
+                print("Error")
+                return render_template('comments.html', comment_list=comment_list)
+            print(message)
+            uploaded = Back_end.upload_comment("test",message)
+            if uploaded:
+                print("File was uploaded Succesfully")
+            comment_list = Back_end.get_comments()
+            return render_template('comments.html', comment_list=comment_list)
+        return render_template('comments.html', comment_list=comment_list)
+
     def uploadImage(f, filename):
         """Calls upon the Backend object upload method, passing a IO object
         and a String representing the file and its filename respectively.

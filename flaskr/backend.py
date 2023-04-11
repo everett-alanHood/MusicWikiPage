@@ -9,6 +9,9 @@ import os
 # from markdown import markdown
 import markdown
 import re
+
+import time
+from datetime import datetime
 """
 Args:
 Explain:
@@ -46,6 +49,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
+        self.bucket_messages = storage_client.bucket('minorbugs_comments')
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -90,7 +94,31 @@ class Backend:
         html_content = markdown.markdown(md_content)
         
         return html_content
+        
+    def get_comments(self):
+        blobs = list(self.bucket_messages.list_blobs())
+        comments_lst = []
+        for blob in blobs:
+            metadata = blob.name.split(":")
+            timestamp = str(datetime.fromtimestamp(float(metadata[0])))[0:-10]
+            user = metadata[1]
+            user_dict = {
+                "user": user,
+                "time": timestamp,
+                "content": blob.download_as_string().decode('utf-8')
+            }
+            comments_lst.append(user_dict)
+        return comments_lst
 
+    def upload_comment(self, username, content):
+        timestamp = str(time.time())
+        filename = timestamp+":"+username
+        message_blob = self.bucket_messages.blob(filename)
+        if message_blob.exists():
+            return False
+        message_blob.upload_from_string(content)
+        return True
+    
     def upload(self, content, filename):
         """
         Args: Contents of a file (IO), the filename (Str)
