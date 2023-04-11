@@ -42,10 +42,10 @@ def make_endpoints(app, Backend=Backend):
             """
             #TODO Doesnt display full name, but instead the id, fixit
             self.name = f'{name}'
-            self.id = f'{uuid.uuid4()}'
+            # self.id = f'{uuid.uuid4()}'
 
         def get_id(self):
-            return self.id
+            return self.name
 
         def is_authenticated(self):
             return True

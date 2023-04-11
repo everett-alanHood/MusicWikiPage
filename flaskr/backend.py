@@ -57,6 +57,24 @@ class Backend:
         }
         self.all_pages = self.pages | self.sub_pages
 
+        # Pre-Processing for model input
+        stop_words = stopwords.words('english')
+        self.re_sw = re.compile(f"\\b({'|'.join(stop_words)})\\b")
+        self.remove_sw = lambda text : self.re_sw.sub('', text)
+        del stop_words
+
+        self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
+        self.remove = lambda text : self.re_link.sub('', text)
+
+        self.tokenize = None # Download tokenizer used during training
+        self.max_data_len = 1600
+        
+        # Store model
+        model_path = 'temp/path/to/summary/model'
+        blob_model = self.bucket_model(model_path)
+        self.model = tf.keras.models.load_model(model_path)
+
+
     def get_all_page_names(self):
         """
         Args: 
@@ -112,6 +130,45 @@ class Backend:
             return False
 
         blob.upload_from_file(content)
+        return True
+    
+    def upload_summary(self, filename):
+        """
+        Pre-Processes and cleans content text, gets
+        summary from model and uploads the summary
+        to the minorbugs_summary bucket
+
+        args:
+            - file_name (Str), name of .md file
+
+        returns:
+            - True or False
+        """
+        pass
+        no_head_url = ''
+        md_blob = self.bucket_content.blob(f'{filename}.md')
+        md_lines = md_blob.open('rb') #blob.read().decode("utf-8")
+
+        for line in md_lines:
+            if line[0] == '#': 
+                continue
+            line = self.remove(line)
+            no_head_url += line
+            
+        cleaned_str = self.remove_sw(no_head_url.lower())
+        if len(cleaned_str) > self.max_data_len: 
+            return False
+
+        token_data = self.tokenize.texts_to_sequences(cleaned_str)
+        # Pad data (use max_data_len)??
+
+        token_summary = self.model.predict(token_data)
+        list_summary = self.tokenize.sequences_to_text(token_summary)
+        str_summary = ''.join(list_summary)
+
+        blob = self.bucket_summary.blob(f'{filename}.md')
+        blob.upload_from_string(str_summary)
+
         return True
 
     def url_check(self, file_content, filename):
