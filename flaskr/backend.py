@@ -96,6 +96,12 @@ class Backend:
         return html_content
         
     def get_comments(self):
+        """
+        Args: self
+        Explain: Gets all the comments stored in the Google Cloud buckets and returns
+        them as a list of dictionaries containing all the comment info.
+        Returns: List of dictionaries representing the comments.
+        """
         blobs = list(self.bucket_messages.list_blobs())
         comments_lst = []
         for blob in blobs:
@@ -111,6 +117,17 @@ class Backend:
         return comments_lst
 
     def upload_comment(self, username, content):
+        """
+        Args:
+        username: String representation of the logged in username.
+        content: String representation of the comment typed out by the user in the comment text input.
+        Explain: Receives a username and the comment content and formats the blob name as timestamp:username and then the contents of that blob
+        is the message. It is then uploaded to the Google Cloud Buckets and then served with all the other comments.
+        Returns: 
+        Boolean representing if the upload was successful or not.
+        """
+        if not content:
+            return False
         timestamp = str(time.time())
         filename = timestamp+":"+username
         message_blob = self.bucket_messages.blob(filename)
