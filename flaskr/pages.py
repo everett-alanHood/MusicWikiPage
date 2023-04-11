@@ -45,7 +45,7 @@ def make_endpoints(app, Backend=Backend):
             self.id = f'{uuid.uuid4()}'
 
         def get_id(self):
-            return self.id
+            return self.name
 
         def is_authenticated(self):
             return True
@@ -202,11 +202,12 @@ def make_endpoints(app, Backend=Backend):
         comment_list = Back_end.get_comments()
         if request.method == 'POST':
             message = request.form.get("comment")
+            author = request.form.get("hidden")
             if not message:
                 print("Error")
                 return render_template('comments.html', comment_list=comment_list)
             print(message)
-            uploaded = Back_end.upload_comment("test",message)
+            uploaded = Back_end.upload_comment(author,message)
             if uploaded:
                 print("File was uploaded Succesfully")
             comment_list = Back_end.get_comments()

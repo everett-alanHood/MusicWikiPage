@@ -142,7 +142,24 @@ def file_success():
     file.read.return_value = "File Sucess"
     return file
 
+@pytest.fixture
+def comment_success():
+    file = MagicMock()
+    file.return_value = "Text from the start"
+    file.endswith.return_value = True
+    file.name.return_value = "1680980576.6452136:sandy"
+    file.read.return_value = "Hello World"
+    return file
 
+@pytest.fixture
+def comment_failed():
+    file = MagicMock()
+    file.return_value = "Text from the start"
+    file.endswith.return_value = True
+    file.name.return_value = "1680980576.6452136:sandy"
+    file.read.return_value = ""
+    return file
+    
 @pytest.fixture
 def valid_user():
     user_info = {}
@@ -202,6 +219,15 @@ def test_upload_sucess(file_success):
         val = be.upload(file_success, file_success.name)
     assert val == True
 
+def test_comments_upload_sucess(comment_success):
+    be = Backend('app',SC=storage_client_mock())
+    success = be.upload_comment("sandy",comment_success.read())
+    assert success == True
+
+def test_comments_upload_fail(comment_failed):
+    be = Backend('app',SC=storage_client_mock())
+    success = be.upload_comment("sandy",comment_failed.read())
+    assert success == False
 
 def test_get_all_pages_names():
     be = Backend(app)

@@ -24,8 +24,11 @@
     </div>
     <h2>Post your comment here!</h2>
     <form method="POST">
+        {% if current_user.is_authenticated %}
+        <input type="hidden" name="hidden" value={{current_user.name}}>
         <textarea name="comment"></textarea>
         <input type="submit" value="Submit"/>
+        {% endif %}
     </form>
 </body>
 </html>
