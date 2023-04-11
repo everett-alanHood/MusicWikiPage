@@ -1,0 +1,10 @@
+
+datasets
+gensim
+nltk
+numpy
+pandas
+regex
+tensorflow
+tensorflow_cloud
+tensorflow-cloud

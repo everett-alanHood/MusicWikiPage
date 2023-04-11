@@ -46,6 +46,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
+        self.bucket_summary = storage_client.buckeet('minorbugs_summary')
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -130,6 +131,8 @@ class Backend:
             return False
 
         blob.upload_from_file(content)
+        if file_end == "md" and not self.upload_summary(filename):
+-            return False
         return True
     
     def upload_summary(self, filename):
