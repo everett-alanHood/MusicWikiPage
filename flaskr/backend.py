@@ -147,7 +147,7 @@ class Backend:
         returns:
             - True or False
         """
-        pass
+        
         no_head_url = ''
         md_blob = self.bucket_content.blob(f'{filename}.md')
         md_lines = md_blob.open('rb') #blob.read().decode("utf-8")
