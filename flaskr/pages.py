@@ -196,9 +196,17 @@ def make_endpoints(app, Backend=Backend):
 
         return render_template('upload.html')
 
+
     @app.route('/comments', methods=['GET','POST'])
     @login_required
     def comments_page():
+        """Displays all fetched Google Cloud Bucket blobs from the comments bucket as comments with the username, time of posting and content being displayed. 
+        When a POST request is received it takes the information passed in the
+        form and creates a blob containing it that is uploaded to the Google Cloud Storage comments bucket. 
+
+        GET: Comments page with input form for users to upload their own content.
+        POST: Takes the message passed as an input in the form and sents it to the Backend, refreshes the page to display newly created comments.
+        """
         comment_list = Back_end.get_comments()
         if request.method == 'POST':
             message = request.form.get("comment")
