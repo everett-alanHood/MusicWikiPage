@@ -249,3 +249,6 @@ class Backend:
             return False, ''
 
         return True, name
+
+    def get_log(self):
+        pass

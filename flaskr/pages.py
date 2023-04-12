@@ -277,6 +277,10 @@ def make_endpoints(app, Backend=Backend):
         flash('Incorrect method used, try again')
         return redirect(url_for('/')), 405
 
+    @app.route('/log')
+    def log():
+        return render_template('log.html')
+
     """
     {% with messages = get_flashed_messages() %}
         {% if messages %}
