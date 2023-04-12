@@ -69,14 +69,20 @@ class blob_object:
     def download_to_filename(self):
         return self.file_content
 
-    def open(self, mode):
+    def open(self, mode='/'):
         return ['## The header',
                 'This is the first line [test](test)',
                 'The second line is important',
                 'Third line is here',
-                'Last line in data' 
-                ]
+                'Last line in data' ]
 
+class mock_model_load:
+
+    def __init__ (self, path="any/path"):
+        pass
+
+    def predict(self, data):
+        return [1,2,3,4,5,6,7,8,9,10]
 
 
 def load_user_mock(data):
@@ -169,17 +175,19 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
+@pytest.fixture
+def summary_name():
+    return 'test_mock'
 
-def summary_model_true(summary_mock):
-    back_end = Backend('app', SC=storage_client_mock())
-    back_end.upload_summary('test_mock')
+def summary_model_true(summary_name):
+    back_end = Backend('app', SC=storage_client_mock(), ml_load=mock_model_load)
+    test = back_end.upload_summary(summary_name)
+    assert test == True
 
-
-def summary_model_true(summary_mock):
-    back_end = Backend('app', SC=storage_client_mock())
-    back_end.upload_summary('test_mock')
-    
-
+def summary_model_false(summary_name):
+    back_end = Backend('app', SC=storage_client_mock(), ml_load=mock_model_load)
+    test = back_end.upload_summary(summary_name*180)
+    assert test == False
 
 def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', SC=storage_client_mock())
