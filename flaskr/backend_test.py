@@ -160,6 +160,10 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
+@pytest.fixture
+def page_name():
+    return "Some Page"
+
 
 def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', SC=storage_client_mock())
@@ -242,4 +246,18 @@ def test_get_image():
     assert images in backend_images
 
 
+def test_get_history(valid_user):
+    back_end = Backend('app', SC=storage_client_mock())
+    back_end.sign_up(valid_user)
+    back_end.sign_in(valid_user)
+    history = back_end.get_history()
+    assert len(history) == 4
+
+def test_add_to_history(valid_user, page_name):
+    back_end = Backend('app', SC=storage_client_mock())
+    back_end.sign_up(valid_user)
+    back_end.sign_in(valid_user)
+    back_end.add_to_history(page_name)
+    history = back_end.get_history()
+    assert len(history) == 6
 #test username:test password:test

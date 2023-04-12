@@ -283,6 +283,7 @@ def make_endpoints(app, Backend=Backend):
     """
 
     @app.route('/history', methods=['GET', 'POST'])
-    def histoy():
+    def history():
         history_summary = Back_end.get_history()
-        return render_template('history.html', history_summary = history_summary)
+        user_name = Back_end.current_username        
+        return render_template('history.html', history_summary = history_summary, user_name = user_name)
