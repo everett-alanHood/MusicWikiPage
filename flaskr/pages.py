@@ -76,7 +76,7 @@ def make_endpoints(app, Backend=Backend):
         """
         return render_template("main.html")
 
-    @app.route('/pages')
+    @app.route('/pages', methods=['GET','POST'])
     def pages():
         """Calls the Backend to look up all existing pages in the GCS bucket corresponding to the Markdown files,
         it then gets all the names and sends the user to a page where all available pages are shown as hyperlinks.
@@ -84,7 +84,16 @@ def make_endpoints(app, Backend=Backend):
         GET: Gets page names from the Backend and sends the user to a page showing all of them as a list of hyperlinks.
         """
         page_names = Back_end.get_all_page_names()
-        return render_template('pages.html', page_names=page_names)
+        sort="Alphabetical"
+        print(request.args.get("sort_by"))
+        if request.args.get("sort_by")=="Popularity":
+            sort="Popularity"
+            
+
+            #get list of page names by Popularity
+        # default list is equal to Alphabetically
+        return render_template('pages.html',sort=sort,page_names=page_names)
+        
 
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
@@ -94,7 +103,14 @@ def make_endpoints(app, Backend=Backend):
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
         html_content = Back_end.get_wiki_page(sub_page)
+        with open(csv_files[0],"w") as csv_most_viewed:
+            if sub_page in 
         return render_template(f'{sub_page}.html', content=html_content)
+
+    #@app.route('/pages', methods=['GET'])
+    #def dropdown():
+        #sort_by=["Alphabetically","Popularlity"]
+        #return render_template("pages.html",sort_by=sort_by)
 
     @app.route('/about')
     def about():

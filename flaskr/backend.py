@@ -9,6 +9,7 @@ import os
 # from markdown import markdown
 import markdown
 import re
+import csv
 """
 Args:
 Explain:
@@ -46,6 +47,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
+        self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -56,7 +58,6 @@ class Backend:
             'form', 'dynamics', 'texture'
         }
         self.all_pages = self.pages | self.sub_pages
-
     def get_all_page_names(self):
         """
         Args: 
@@ -78,6 +79,14 @@ class Backend:
         page_names.sort()
         return page_names
 
+    def page_sort_by_popularity(self):
+        csv_file=self.modify_page_analytics()
+        list=[]
+        with open(csv_file,"r") as csv_most_viewed:
+            for row in csv_most_viewed:
+                list.append(row)
+        print(list)
+        return list
     def get_wiki_page(self, page_name):
         """
         Args: A page name (Str)
@@ -90,6 +99,20 @@ class Backend:
         html_content = markdown.markdown(md_content)
         
         return html_content
+    
+    def modify_page_analytics(self):
+        """This check if a subpage analytics doesnt exist inside in the csv 
+        and defult the ammount of times that the page was viewed to 0"""
+        all_pages=self.get_all_page_names()
+        csv_files=list(self.bucket_page_stats.list_blobs())
+        print(str(csv_files))
+        with open(csv_files[0],"a+") as csv_most_viewed:
+            reader = csv.reader(csv_most_viewed)
+            for sub_page in all_pages:
+                for reader 
+                if sub_page not in reader:
+                    csv_most_viewed.write(sub_page,0)
+            return csv_files
 
     def upload(self, content, filename):
         """
@@ -105,6 +128,7 @@ class Backend:
                 return False
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
+
         elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
             #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
@@ -112,6 +136,7 @@ class Backend:
             return False
 
         blob.upload_from_file(content)
+        
         return True
 
     def url_check(self, file_content, filename):
