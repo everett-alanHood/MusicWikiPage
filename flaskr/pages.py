@@ -23,6 +23,8 @@ def make_endpoints(app, Backend=Backend):
     Markdown(app)
     Back_end = Backend(app)
 
+
+
     class User(UserMixin):
         """User Class that is used by the Login Manager and browser.
 
@@ -46,6 +48,11 @@ def make_endpoints(app, Backend=Backend):
 
         def get_id(self):
             return self.id
+        
+        def get_name(self):
+            print('\n\n\n\n')
+            print(self.name)
+            return self.name
 
         def is_authenticated(self):
             return True
@@ -171,6 +178,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Log out and redirects user to initial page
         """
+        #if Back_end.current_user.is_authenticated:
+        #Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 
@@ -292,3 +301,8 @@ def make_endpoints(app, Backend=Backend):
         {% endif %}
     {% endwith %}
     """
+
+    @app.route('/history', methods=['GET', 'POST'])
+    def histoy():
+        history_summary = Back_end.get_history()
+        return render_template('history.html', history_summary = history_summary)

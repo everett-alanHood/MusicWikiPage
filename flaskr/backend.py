@@ -1,6 +1,7 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from datetime import datetime
 #Hasing password
 import bcrypt  #gensalt, hashpw, checkpw
 import base64
@@ -9,7 +10,11 @@ import os
 # from markdown import markdown
 import markdown
 import re
+<<<<<<< HEAD
 import csv
+=======
+from collections import deque
+>>>>>>> 2f7588a3e7bf9b47b25d767a16c26ecdfe483ed1
 """
 Args:
 Explain:
@@ -47,17 +52,56 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
+<<<<<<< HEAD
         self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
+=======
+        self.bucket_users.bucket_history = storage_client.bucket('user_history')        
+>>>>>>> 2f7588a3e7bf9b47b25d767a16c26ecdfe483ed1
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
-            'signup', 'images'
+            'signup', 'images', 'history'
         }
         self.sub_pages = {
             'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre',
             'form', 'dynamics', 'texture'
         }
         self.all_pages = self.pages | self.sub_pages
+<<<<<<< HEAD
+=======
+        self.current_username = ""
+
+    def get_history(self):
+        user_blob = self.bucket_users.blob(f'{self.current_username}')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
+        print(content)
+        print("content\ngetHistory\n\n")
+        content = content.replace('\'', '')
+        return content.strip('][\'').split(', ')
+    
+    def add_to_history(self, page_name):
+        user_blob = self.bucket_users.blob(f'{self.current_username}')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')
+        
+        name = content[0]
+        hash_pass = content[1][2:-1].encode('utf-8')
+
+        raw_log = content[2]
+        raw_log = raw_log.replace('[', '')
+        raw_log = raw_log.replace(']', '')
+        raw_log = raw_log.replace('\'', '')
+        raw_log = raw_log.split(', ')
+
+        history = raw_log
+        
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history.append(page_name)
+        history.append(timestamp)
+
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+    
+>>>>>>> 2f7588a3e7bf9b47b25d767a16c26ecdfe483ed1
     def get_all_page_names(self):
         """
         Args: 
@@ -216,12 +260,18 @@ class Backend:
         user_pass = user_info['password']
         name = user_info['name']
 
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history = ["Account Began", timestamp]
+
+
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
 
-        user_blob.upload_from_string(f"{name}\n{hash_pass}")
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+        self.current_username = user_name
         return True, name
 
     def sign_in(self, user_check):
@@ -241,12 +291,28 @@ class Backend:
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
 
+        raw_log = content[2]
+        raw_log = raw_log.replace('[', '')
+        raw_log = raw_log.replace(']', '')
+        raw_log = raw_log.replace('\'', '')
+        raw_log = raw_log.split(', ')
+
+        history = raw_log
+        
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history.append("Logged In")
+        history.append(timestamp)
+
         user_pass = user_check['password']
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
 
         if not bcrypt.checkpw(encoded, hash_pass):
             return False, ''
+
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+        self.current_username = user_name        
 
         return True, name
 
