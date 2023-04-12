@@ -6,15 +6,19 @@ import bcrypt  #gensalt, hashpw, checkpw
 import base64
 import hashlib
 import os
-# from markdown import markdown
 import markdown
+
+# Data processing
+""" Pip install nltk, numpy, tensorflow """
 import re
-"""
-Args:
-Explain:
-Returns:
-Raises:
-"""
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+import numpy as np
+import pandas as pd
+import re
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import tokenizer_from_json
 
 
 class Backend:
@@ -47,6 +51,8 @@ class Backend:
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_summary = storage_client.buckeet('minorbugs_summary')
+        self.bucket_model = storage_client.bucket('minorbugs_model')
+        
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -71,9 +77,8 @@ class Backend:
         self.max_data_len = 1600
         
         # Store model
-        model_path = 'temp/path/to/summary/model'
-        blob_model = self.bucket_model(model_path)
-        self.model = tf.keras.models.load_model(model_path)
+        model_blob = self.bucket_model.blob('temp_model')
+        self.model = load_model(model_blob)
 
 
     def get_all_page_names(self):
@@ -118,26 +123,28 @@ class Backend:
         Returns: (Boolean)
         """
         file_end = filename.split(".")[-1].lower()
-        #if filename.endswith('.md'):
+
         if file_end == "md":
             if not self.url_check(content, filename):
                 return False
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
+        
         elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
-            #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
+        
         else:
             return False
 
         blob.upload_from_file(content)
         if file_end == "md" and not self.upload_summary(filename):
             return False
+        
         return True
     
     def upload_summary(self, filename):
         """
-        Pre-Processes and cleans content text, gets
+        Pre-Processes and cleans file text, gets
         summary from model and uploads the summary
         to the minorbugs_summary bucket
 

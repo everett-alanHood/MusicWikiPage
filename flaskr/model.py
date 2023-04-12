@@ -1,35 +1,41 @@
-""" Imports """
+raise ValueError('!!! Run the model in google colab !!!')
 
-# Datasets
+### Imports ###
+
+""" Datasets """
 from datasets import load_dataset, load_dataset_builder
+import gensim.downloader as api
 
-# Tensorflow/Keras
+""" Tensorflow/Keras """
+import tensorflow
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, TensorBoard
 from tensorflow.keras.layers import Attention, Bidirectional, Concatenate, Dense, Embedding, Flatten, Input, LayerNormalization, LSTM, MultiHeadAttention
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.preprocessing.text import Tokenizer, text_to_word_sequence
+from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from tensorflow.keras.regularizers import *
 
-# TF Cloud Training
-from tensorflow_cloud import tfc_run
+""" TF Cloud Training """
+import tensorflow_cloud as tfc
 from tensorflow_cloud.core.docker_config import DockerConfig
 
-# Data processing/visualization
+""" Data processing/visualization """
 import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
+import numpy as np
 import pandas as pd
+import re
 
-# Other
+""" Cloud """
+from google.colab import auth
+from google.cloud import storage
+
+""" Other """
+import io
 import sys
 import os
-import numpy as np
-import re
-import gensim.downloader as api
-import multiprocessing as mp
-import time
 
 ##############################################
 
@@ -41,6 +47,7 @@ Originally ran in Google Colab
 
 ##############################################
 
+### Load data ###
 
 """ Check Data """
 ds_name = 'cnn_dailymail' # 'GEM/wiki_lingua' 'ccdv/pubmed-summarization' 'scientific_papers'
@@ -52,25 +59,26 @@ builder.info.features
 
 """ Load Dataset """
 dataset = load_dataset(ds_name, ds_sub)
-length = len(dataset['train']['article'])
-split_len = length
-st = 5
+
+train_len = len(dataset['train']['article'])
+val_len = len(dataset['validation']['article'])
+
+split_train = 100
+split_val = 100
+
+st = 1
 
 """ Split Data and add sos/eos tokens """
 sos_token = '<sos>'
 eos_token = '<eos>'
 
-x_train = np.array([f'{sos_token} {art} {eos_token}' for art in dataset['train']['article'][:split_len]])
-time.sleep(st)
-y_train = np.array([f'{sos_token} {sum} {eos_token}' for sum in dataset['train']['highlights'][:split_len]])
-time.sleep(st)
+x_train = np.array([f'{sos_token} {art} {eos_token}' for art in dataset['train']['article'][:split_train]])
+y_train = np.array([f'{sos_token} {sum} {eos_token}' for sum in dataset['train']['highlights'][:split_train]])
 
-x_val = np.array([f'{sos_token} {art} {eos_token}' for art in dataset['validation']['article']])
-y_val = np.array([f'{sos_token} {sum} {eos_token}' for sum in dataset['validation']['highlights']])
+x_val = np.array([f'{sos_token} {art} {eos_token}' for art in dataset['validation']['article'][:split_val]])
+y_val = np.array([f'{sos_token} {sum} {eos_token}' for sum in dataset['validation']['highlights'][:split_val]])
 
-time.sleep(st)
 x_train = np.concatenate([x_train, x_val], axis=0)
-time.sleep(st)
 y_train = np.concatenate([y_train, y_val], axis=0)
 
 del x_val, y_val
@@ -86,9 +94,11 @@ df.head()
 
 del dataset, df
 
+### Clean and process data ###
+
 """ Get stop words"""
 stop_words = stopwords.words('english')
-stop_words.append('cnn')
+stop_words.extend(['cnn', 'reuters'])
 
 """ Lowercase all words """
 x_train, y_train = np.char.lower(x_train), np.char.lower(y_train)
@@ -97,20 +107,11 @@ x_test, y_test = np.char.lower(x_test), np.char.lower(y_test)
 """ Remove stop words """
 pattern = re.compile("\\b(" + "|".join(stop_words) + ")\\b")
 
-def sw_pattern(text):
-  return pattern.sub('', text)
+vec_pattern = np.vectorize(lambda text:pattern.sub('', text))
+x_train = vec_pattern(x_train)
+y_train = vec_pattern(y_train)
 
-with mp.Pool() as p:
-  time.sleep(st)
-  x_train = np.array(p.map(sw_pattern, x_train))
-  time.sleep(st)
-  y_train = np.array(p.map(sw_pattern, y_train))
-  time.sleep(st)
-  x_test = np.array(p.map(sw_pattern, x_test))
-  time.sleep(st)
-  y_test = np.array(p.map(sw_pattern, y_test))
-
-del pattern, stop_words
+del pattern, stop_words, vec_pattern
 
 """ Tokenize data """
 tokenizer = Tokenizer(filters='"#$%&()*+,-/:;=@[\\]^_`{|}~\t\n', oov_token="<unk>")
@@ -130,11 +131,12 @@ df.head()
 
 del df
 
+### ###
 """ Load Pre-Trained Word Embeddings """
 w2v_model = api.load('word2vec-google-news-300')
 
 """ Create Embedding Matrix """
-vocab_dim = len(tokenizer.word_index)
+vocab_dim = len(tokenizer.word_index)+1
 emb_dim = 300
 x_row, x_col = x_train.shape
 y_row, y_col = y_train.shape
@@ -147,7 +149,7 @@ for word, idx in tokenizer.word_index.items():
 
 del w2v_model
 
-
+""" Develop Model """
 def get_model(lat_0=128, lat_1=128, 
               dr_0=0.35, dr_1=0.35, dr_2=0.35,
               att_0=2, att_1=2, 
@@ -211,55 +213,67 @@ def compile_model(model, lr=0.001):
                     loss='sparse_categorical_crossentropy')#, metrics=['accuracy'])
                     # metrics=[met_rl, 'accuracy'])
 
+### Run model ###
 
+""" Create paths """
 GCP_PROJECT_ID = 'model-training-383203'
 GCS_BUCKET  = 'model_sum'
-REGION = 'us-central1'
-job_name = 'text_summarization'
-auth_json = '/content/model-training-383203-38e4420de909.json'
+REGION = 'asia-southeast1'
+JOB_NAME = 'temp_model'
+AUTH_JSON = '/content/model-training-383203-38e4420de909.json'
+REQUIRE = 'model-require.txt'
 
-# !gcloud auth login
+GCS_BASE_PATH = f'gs://{GCS_BUCKET}/{JOB_NAME}'
+TENSORBOARD_LOGS = os.path.join(GCS_BASE_PATH,"logs")
+MODEL_CP = os.path.join(GCS_BASE_PATH,"checkpoints")
+SAVED_MODEL_DIR = os.path.join(GCS_BASE_PATH,"saved_model")
+TOKENIZE_DIR = os.path.join(GCS_BASE_PATH, 'tokenizer')
 
-# !gcloud config set project 136963608278
+""" Authorize user """
+if not tfc.remote():
+  if "google.colab" in sys.modules:
+      auth.authenticate_user()
+      os.environ["GOOGLE_CLOUD_PROJECT"] = GCP_PROJECT_ID 
+      os.environ["GCS_BUCKET"] = GCS_BUCKET
+      os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = AUTH_JSON
 
-# auth.authenticate_user()
-
-os.environ["GOOGLE_CLOUD_PROJECT"] = GCP_PROJECT_ID 
-os.environ["GCS_BUCKET"] = GCS_BUCKET
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = auth_json
-
-gct = True
-
-if gct:
-    GCS_BASE_PATH = f'gs://{GCS_BUCKET}'
-    tenorboard_logs_path = os.path.join(GCS_BASE_PATH,"logs")
-    model_cp_path = os.path.join(GCS_BASE_PATH,"checkpoints")
-    save_model_path = os.path.join(GCS_BASE_PATH,"saved_model")
-else:
-    GCS_BASE_PATH = f'{job_name}'
-    tenorboard_logs_path = f'{job_name}/tb_logs'
-    model_cp_path = f'{job_name}/model_cp'
-    save_model_path = f'{job_name}/saved_model.h5'
-
-
+""" Get and Set up model"""
 model = get_model()
 compile_model(model)
-callbacks = get_callbacks(tenorboard_logs_path, model_cp_path)
+callbacks = get_callbacks(TENSORBOARD_LOGS, MODEL_CP)
 
-if gct:
-    docker = DockerConfig(image_build_bucket=GCS_BUCKET)
-
-    tfc_run(
-        requirements_txt="/content/model-requirements.txt",
-        distribution_strategy="auto",
-        worker_count=3,
-        docker_config=docker
-    )
-else:
-    history = model.fit([x_train[:10], y_train[:10][:,:-1]], y_train[:10][:,1:], 
+""" Run model if in cloud """
+if tfc.remote():
+    history = model.fit([x_train, y_train[:,:-1]], y_train[:,1:], 
                         validation_split=0.25, 
-                        batch_size=100, epochs=3,
+                        batch_size=128, epochs=100,
+                        callbacks=callbacks)
+    
+else:
+    history = model.fit([x_train[:train_len], y_train[:train_len][:,:-1]], y_train[:train_len][:,1:], 
+                        validation_split=0.25, 
+                        batch_size=50, epochs=50,
                         callbacks=callbacks)
 
+""" Save model parameters """
+model.save(SAVED_MODEL_DIR)
 
+storage_client = storage.Client()
+bucket = storage_client.bucket(GCS_BUCKET)
+blob = bucket.blob(TOKENIZE_DIR)
+token_json = tokenizer.to_json()
+
+with open('tokenizer.json', 'w') as f:
+  f.write(token_json)
+
+blob.upload_from_filename('tokenizer.json')
+
+""" Run model on cloud """
+docker = DockerConfig(image_build_bucket=GCS_BUCKET)
+# entry_point = path
+tfc.run(
+        requirements_txt=REQUIRE,
+        distribution_strategy="auto",
+        docker_config=docker
+)
 
