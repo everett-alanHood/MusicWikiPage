@@ -22,7 +22,7 @@ def make_endpoints(app, Backend=Backend, calls=None):
     login_manager.session_protection = 'strong'
     Markdown(app)
     if calls:
-        Back_end = Backend(app, calls)
+        Back_end = Backend(app, calls=calls)
     else:
         Back_end = Backend(app)
 
