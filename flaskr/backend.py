@@ -34,7 +34,7 @@ class Backend:
         all_pages: All valid pages on the wiki (Union of pages and sub_pages)
     """
 
-    def __init__(self, app, SC=storage.Client()):
+    def __init__(self, app, SC=storage.Client(), ml_load=load_model):
         """
         Args: 
             An App from flask (ex. Flask(__name__) )
@@ -77,7 +77,7 @@ class Backend:
         # Store model
         blob = 'temp_model'
         model_path = f'gs://minorbugs_model/{blob}/saved_model'
-        self.model = load_model(model_path)
+        self.model = ml_load(model_path)
 
 
     def get_all_page_names(self):

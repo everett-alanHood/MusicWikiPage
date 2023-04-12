@@ -69,6 +69,15 @@ class blob_object:
     def download_to_filename(self):
         return self.file_content
 
+    def open(self, mode):
+        return ['## The header',
+                'This is the first line [test](test)',
+                'The second line is important',
+                'Third line is here',
+                'Last line in data' 
+                ]
+
+
 
 def load_user_mock(data):
     mock_user = User_mock(data)
@@ -160,9 +169,15 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
-def test_upload_summary():
+
+def summary_model_true(summary_mock):
     back_end = Backend('app', SC=storage_client_mock())
-    back_end.upload_summary('')
+    back_end.upload_summary('test_mock')
+
+
+def summary_model_true(summary_mock):
+    back_end = Backend('app', SC=storage_client_mock())
+    back_end.upload_summary('test_mock')
     
 
 
