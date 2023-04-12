@@ -113,7 +113,7 @@ class Backend:
         
     def page_sort_by_popularity(self):
         self.modify_page_analytics()
-        list=[]
+        list=self.make_popularity_list()
         print(list)
         return list
     def get_wiki_page(self, page_name):
