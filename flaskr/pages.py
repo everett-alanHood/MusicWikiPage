@@ -6,7 +6,7 @@ import os
 import uuid
 import zipfile
 from flaskext.markdown import Markdown
-
+import csv
 
 def make_endpoints(app, Backend=Backend):
     """Connects the frontend with the established routes and the backend.
@@ -88,7 +88,7 @@ def make_endpoints(app, Backend=Backend):
         print(request.args.get("sort_by"))
         if request.args.get("sort_by")=="Popularity":
             sort="Popularity"
-            
+            page_name=Back_end.page_sort_by_popularity()
 
             #get list of page names by Popularity
         # default list is equal to Alphabetically
@@ -103,8 +103,19 @@ def make_endpoints(app, Backend=Backend):
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
         html_content = Back_end.get_wiki_page(sub_page)
-        with open(csv_files[0],"w") as csv_most_viewed:
-            if sub_page in 
+        csv_file=Back_end.bucket_page_stats[0]
+        list=[]
+        with open(csv_file,"r") as csv_open:
+            read=csv.reader(csv_open)
+            for x in read:
+                list.append()
+        for x in list:
+            if x[0]==sub_page:
+                x[1]+=1
+        with open(csv_file,"w") as csv_open:
+            for y in list:
+                csv_open.write(list[y][0]+","+list[y][1])       
+        
         return render_template(f'{sub_page}.html', content=html_content)
 
     #@app.route('/pages', methods=['GET'])

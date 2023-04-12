@@ -105,12 +105,13 @@ class Backend:
         and defult the ammount of times that the page was viewed to 0"""
         all_pages=self.get_all_page_names()
         csv_files=list(self.bucket_page_stats.list_blobs())
-        print(str(csv_files))
+        csv_list=[]
         with open(csv_files[0],"a+") as csv_most_viewed:
             reader = csv.reader(csv_most_viewed)
+            for x in reader:
+                csv_list.append(x[0])
             for sub_page in all_pages:
-                for reader 
-                if sub_page not in reader:
+                if sub_page not in csv_list:
                     csv_most_viewed.write(sub_page,0)
             return csv_files
 
