@@ -196,8 +196,7 @@ def make_endpoints(app, Backend=Backend):
 
         return render_template('upload.html')
 
-
-    @app.route('/comments', methods=['GET','POST'])
+    @app.route('/comments', methods=['GET', 'POST'])
     @login_required
     def comments_page():
         """Displays all fetched Google Cloud Bucket blobs from the comments bucket as comments with the username, time of posting and content being displayed. 
@@ -213,9 +212,9 @@ def make_endpoints(app, Backend=Backend):
             author = request.form.get("hidden")
             if not message:
                 print("Error")
-                return render_template('comments.html', comment_list=comment_list)
-            print(message)
-            uploaded = Back_end.upload_comment(author,message)
+                return render_template('comments.html',
+                                       comment_list=comment_list)
+            uploaded = Back_end.upload_comment(author, message)
             if uploaded:
                 print("File was uploaded Succesfully")
             comment_list = Back_end.get_comments()

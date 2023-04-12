@@ -92,9 +92,9 @@ class Backend:
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown.markdown(md_content)
-        
+
         return html_content
-        
+
     def get_comments(self):
         """
         Args: self
@@ -129,13 +129,13 @@ class Backend:
         if not content:
             return False
         timestamp = str(time.time())
-        filename = timestamp+":"+username
+        filename = timestamp + ":" + username
         message_blob = self.bucket_messages.blob(filename)
         if message_blob.exists():
             return False
         message_blob.upload_from_string(content)
         return True
-    
+
     def upload(self, content, filename):
         """
         Args: Contents of a file (IO), the filename (Str)

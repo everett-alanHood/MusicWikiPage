@@ -142,6 +142,7 @@ def file_success():
     file.read.return_value = "File Sucess"
     return file
 
+
 @pytest.fixture
 def comment_success():
     file = MagicMock()
@@ -151,6 +152,7 @@ def comment_success():
     file.read.return_value = "Hello World"
     return file
 
+
 @pytest.fixture
 def comment_failed():
     file = MagicMock()
@@ -159,7 +161,8 @@ def comment_failed():
     file.name.return_value = "1680980576.6452136:sandy"
     file.read.return_value = ""
     return file
-    
+
+
 @pytest.fixture
 def valid_user():
     user_info = {}
@@ -193,12 +196,14 @@ def test_sign_in_sucesss(valid_user):
     assert valid == True
     assert data == "Everett-Alan"
 
+
 def test_sign_up_failed(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
     back_end.sign_up(valid_user)
     valid, data = back_end.sign_up(valid_user)
     assert valid == False
     assert data == ""
+
 
 def test_sign_up_success(valid_user):
     back_end = Backend('app', SC=storage_client_mock())
@@ -219,15 +224,18 @@ def test_upload_sucess(file_success):
         val = be.upload(file_success, file_success.name)
     assert val == True
 
+
 def test_comments_upload_sucess(comment_success):
-    be = Backend('app',SC=storage_client_mock())
-    success = be.upload_comment("sandy",comment_success.read())
+    be = Backend('app', SC=storage_client_mock())
+    success = be.upload_comment("sandy", comment_success.read())
     assert success == True
 
+
 def test_comments_upload_fail(comment_failed):
-    be = Backend('app',SC=storage_client_mock())
-    success = be.upload_comment("sandy",comment_failed.read())
+    be = Backend('app', SC=storage_client_mock())
+    success = be.upload_comment("sandy", comment_failed.read())
     assert success == False
+
 
 def test_get_all_pages_names():
     be = Backend(app)

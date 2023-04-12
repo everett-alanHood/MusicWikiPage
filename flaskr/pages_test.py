@@ -170,13 +170,12 @@ def test_auth_login_sucesss(client):
 #     assert resp.status_code == 200  #This check that the connection to upload is good
 #     # if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
 
-
 # def test_upload_success(client):
 #     resp = client.get("/upload")
 #     assert resp.status_code == 200  #This check that the connection to upload is good
 
 
-    # if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
+# if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
 def test_get_about(client):
     resp = client.get("/about")
     assert resp.status_code == 200  #This check that the connection to about is good
@@ -189,12 +188,10 @@ def test_get_about(client):
 #     assert b"All Pages" in resp.data
 #     assert b"Sub-Pages" in resp.data
 
-
 # def test_pages_next(client):
 #     resp = client.get("/pages/chord")
 #     assert resp.status_code == 200  #This check that the connection to a sub pages is good
 #     assert b"Chord" in resp.data
-
 
 # def test_get_welcome(client):
 #     resp = client.get("/welcome")
@@ -202,6 +199,5 @@ def test_get_about(client):
 #     #sign in user to use welcome
 #     assert resp.status_code == 401  #This check that the connection to welcome is good
 #     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
-
 
 # user vincent username is username and password is password
