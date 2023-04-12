@@ -15,7 +15,6 @@ import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 import numpy as np
-import pandas as pd
 import re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
@@ -50,8 +49,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
-        self.bucket_summary = storage_client.buckeet('minorbugs_summary')
-        self.bucket_model = storage_client.bucket('minorbugs_model')
+        self.bucket_summary = storage_client.bucket('minorbugs_summary')
         
         #page urls
         self.pages = {
@@ -77,8 +75,9 @@ class Backend:
         self.max_data_len = 1600
         
         # Store model
-        model_blob = self.bucket_model.blob('temp_model')
-        self.model = load_model(model_blob)
+        blob = 'temp_model'
+        model_path = f'gs://minorbugs_model/{blob}/saved_model'
+        self.model = load_model(model_path)
 
 
     def get_all_page_names(self):

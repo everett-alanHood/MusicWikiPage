@@ -160,10 +160,11 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
-
 def test_upload_summary():
-    be = Backend(app)
+    back_end = Backend('app', SC=storage_client_mock())
+    back_end.upload_summary('')
     
+
 
 def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', SC=storage_client_mock())
