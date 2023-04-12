@@ -128,7 +128,6 @@ class User_mock:
     def is_anonymous(self):
         return False
 
-
 class Flask_mock:
 
     def __init__(self, name):
@@ -212,7 +211,6 @@ def test_summary_model_false(summary_name):
     test = back_end.upload_summary(summary_name)
     assert test == False
 
-
 def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', mock_function())
     back_end.sign_up(valid_user)
@@ -240,21 +238,21 @@ def test_sign_up_success(valid_user):
     assert valid == True
     assert data == "Everett-Alan"
 
-
+# , mock_function()
 def test_upload_failed(file_failed):
-    be = Backend(app)
+    be = Backend(app, mock_function())
     val = be.upload(file_failed, file_failed.name)
     assert val == False
 
 
 def test_upload_sucess(file_success):
-    be = Backend(app)
+    be = Backend(app, mock_function())
     with patch.object(be, 'upload', return_value=True):
         val = be.upload(file_success, file_success.name)
     assert val == True
 
 def test_get_all_pages_names():
-    be = Backend(app)
+    be = Backend(app, mock_function())
     test_string = 'chord'
     with patch.object(be,
                       'get_all_page_names',
@@ -268,7 +266,7 @@ def test_get_all_pages_names():
 
 
 def test_get_wiki_page(page_name):
-    be = Backend(app)
+    be = Backend(app, mock_function())
     with patch.object(
             be,
             'get_wiki_page',
@@ -280,7 +278,7 @@ def test_get_wiki_page(page_name):
 
 
 def test_get_image():
-    be = Backend(app)
+    be = Backend(app, mock_function())
     images = 'https://storage.googleapis.com/minorbugs_images/Mozart.jpg'
     with patch.object(
             be,
