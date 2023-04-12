@@ -79,13 +79,41 @@ class Backend:
                 
         page_names.sort()
         return page_names
-
+        
+    def make_popularity_list(self):
+        bucket=self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")
+        downloaded_file = blob.download_as_text(encoding="utf-8")
+        page_data_list=list(downloaded_file)
+        data=[]
+        string=""
+        for index ,character in enumerate(page_data_list):
+            if (character == "," or character == "\r" or character==page_data_list[-1] )and character != "\n":
+                print(str(page_data_list[-1]))
+                if character==page_data_list[-1]:
+                    string=string+character
+                data.append(string)
+                string=""
+            elif character != "\n" and character != "\r":
+                string=string+character
+        temp=[]
+        true_data=[]
+        print("This is the data of :"+str(data))
+        for index , pairs in enumerate (data):
+            temp.append(pairs)            
+            print(str(index))
+            
+            if index%2==1:
+                print(str(temp))
+                temp[1]=int(temp[1])
+                
+                true_data.append(temp.copy())
+                temp.clear()
+        return true_data
+        
     def page_sort_by_popularity(self):
-        csv_file=self.modify_page_analytics()
+        self.modify_page_analytics()
         list=[]
-        with open(csv_file[0].name,"r") as csv_most_viewed:
-            for row in csv_most_viewed:
-                list.append(row)
         print(list)
         return list
     def get_wiki_page(self, page_name):
@@ -105,18 +133,21 @@ class Backend:
         """This check if a subpage analytics doesnt exist inside in the csv 
         and defult the ammount of times that the page was viewed to 0"""
         all_pages=self.get_all_page_names()
-        csv_files_bucket=self.bucket_page_stats
-        blob = csv_files_bucket.get_blob()
-        csv_name=blob.download_as_text(encoding="utf-8")
-        csv_list=[]
-        with open(csv_name,"a+") as csv_most_viewed:
-            reader = csv.reader(csv_most_viewed)
-            for x in reader:
-                csv_list.append(x[0])
-            for sub_page in all_pages:
-                if sub_page not in csv_list:
-                    csv_most_viewed.write(sub_page,0)
-            return blob
+        bucket=self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")
+        csv_list=self.make_popularity_list()
+        names=[]
+        string=""
+        for x in csv_list:
+            string=string+x[0]+","+str(x[1])+"\r\n"
+            names.append(x[0])
+        for sub_page in all_pages:
+            if sub_page not in names:
+                names.append(sub_page)
+                string=string+sub_page+","+str(0)+"\r\n"
+            
+        blob.upload_from_string(string)
+            
 
     def upload(self, content, filename):
         """
@@ -140,7 +171,6 @@ class Backend:
             return False
 
         blob.upload_from_file(content)
-        
         return True
 
     def url_check(self, file_content, filename):

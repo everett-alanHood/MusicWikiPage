@@ -90,7 +90,6 @@ def make_endpoints(app, Backend=Backend):
         if request.args.get("sort_by")=="Popularity":
             sort="Popularity"
             page_names=Back_end.page_sort_by_popularity()
-
             #get list of page names by Popularity
         # default list is equal to Alphabetically
         return render_template('pages.html',sort=sort,page_names=page_names)
@@ -106,41 +105,35 @@ def make_endpoints(app, Backend=Backend):
         
         html_content = Back_end.get_wiki_page(sub_page)
         bucket=Back_end.bucket_page_stats
-        blob = bucket.get_blob("Dictionary by Popularity.csv")
-        downloaded_file = blob.download_as_text(encoding="utf-8")
-        page_data_list=list(downloaded_file)
-        index1=0
-        data=[]
+        blob = bucket.get_blob("Dictionary by Popularity.csv")        
+        data=Back_end.make_popularity_list()
+        print(data)
         string=""
+        """
         for line in downloaded_file.split("\n"):
             line=line.strip()
             print("The line:"+str(line))
             list1=line.split(",")
             print("The list:"+str(list1))
             print(type(list1[-1]))
-        print("This is the data of :"+str(data))            
-        for index ,character in enumerate(page_data_list):
-            if character == "," or character == "\r" :
-                if character==page_data_list[-1]:
-                    string=string+character
-                data.append(string)
-                string=""
-            elif character != "\n" and character != "\r":
-                string=string+character
-
+            list1[-1]=int(list1[-1])
+            data.append(list)
+        """ 
+        temp=[]
+        
         print("This is the data of :"+str(data))
-        print("This is the data of :"+str(page_data_list))
-        print("This is the data of :"+downloaded_file)
-        with open(blob,"r") as csv_open:
-            read=csv.reader(csv_open)
-            for x in read:
-                list.append(x)
-        for page in list:
-            if page[0]==sub_page:
-                page[1]+=1
-        with open(blob,"w") as csv_open:
-            for y in list:
-                csv_open.write(list[y][0]+","+list[y][1])       
+        for index , pairs in enumerate (data):
+            if pairs[0]==sub_page:
+                pairs[1]+=1
+        print(str(data))          
+        string=""
+        for index in data:
+            string=string+index[0]+","+str(index[1])+"\r\n"
+        
+        print(string)
+        blob.upload_from_string(string)
+        print("This is the data of :"+str(data))
+                      
         
         return render_template(f'{sub_page}.html', content=html_content)
 
