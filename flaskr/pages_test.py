@@ -4,6 +4,9 @@ from flaskr import backend
 from unittest.mock import MagicMock, patch
 from flaskr import create_app
 import pytest
+from google.cloud import storage
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import tokenizer_from_json
 
 
 class storage_client_mock:
@@ -136,6 +139,17 @@ class Flask_mock:
     def __init__(self, name):
         pass
 
+def mock_function(mock_SC=True, mock_load_model=True, mock_token=True, length=1600):
+    mocked = [storage_client_mock(), mock_model_load, mock_tokenizer_from_json, length]
+    
+    if not mock_SC:
+        mocked[0] = storage.Client()
+    if not mock_load_model:
+        mocked[1] = load_model
+    if not mock_token:
+        mocked[2] = tokenizer_from_json
+
+    return mocked
 
 # See https://flask.palletsprojects.com/en/2.2.x/testing/
 # for more info on testing
@@ -143,7 +157,7 @@ class Flask_mock:
 def app():
     app = create_app({
         'TESTING': True,
-    })
+    }, mocking=mock_function(False))
     return app
 
 

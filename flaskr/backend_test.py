@@ -1,7 +1,9 @@
 from flaskr.backend import Backend
 from unittest.mock import MagicMock, patch
 import pytest
-
+from google.cloud import storage
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import tokenizer_from_json
 
 class storage_client_mock:
 
@@ -133,6 +135,18 @@ class Flask_mock:
     def __init__(self, name):
         pass
 
+def mock_function(mock_SC=True, mock_load_model=True, mock_token=True, length=1600):
+    mocked = [storage_client_mock(), mock_model_load, mock_tokenizer_from_json, length]
+    
+    if not mock_SC:
+        mocked[0] = storage.Client()
+    if not mock_load_model:
+        mocked[1] = load_model
+    if not mock_token:
+        mocked[2] = tokenizer_from_json
+        
+    return mocked
+
 
 @pytest.fixture
 def app():
@@ -194,12 +208,11 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
+
 @pytest.fixture
 def summary_name():
     return 'test mock '
 
-def mock_function(length=1600):
-    return storage_client_mock(), mock_model_load, mock_tokenizer_from_json, length
 
 def test_summary_model_true(summary_name):
     back_end = Backend('app', mock_function())

@@ -63,8 +63,9 @@ dataset = load_dataset(ds_name, ds_sub)
 train_len = len(dataset['train']['article'])
 val_len = len(dataset['validation']['article'])
 
-split_train = 100
-split_val = 100
+if not tfc.remote():
+    split_train = 100
+    split_val = 100
 
 st = 1
 
@@ -218,7 +219,7 @@ def compile_model(model, lr=0.001):
 """ Create paths """
 GCP_PROJECT_ID = 'model-training-383203'
 GCS_BUCKET  = 'model_sum'
-REGION = 'asia-southeast1'
+REGION = 'us-central1'
 JOB_NAME = 'temp_model'
 AUTH_JSON = '/content/model-training-383203-38e4420de909.json'
 REQUIRE = 'model-require.txt'
@@ -250,7 +251,7 @@ if tfc.remote():
                         callbacks=callbacks)
     
 else:
-    history = model.fit([x_train[:train_len], y_train[:train_len][:,:-1]], y_train[:train_len][:,1:], 
+    history = model.fit([x_train[:split_train], y_train[:split_train][:,:-1]], y_train[:split_train][:,1:], 
                         validation_split=0.25, 
                         batch_size=50, epochs=50,
                         callbacks=callbacks)
