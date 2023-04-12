@@ -132,7 +132,7 @@ class Backend:
 
         blob.upload_from_file(content)
         if file_end == "md" and not self.upload_summary(filename):
--            return False
+            return False
         return True
     
     def upload_summary(self, filename):

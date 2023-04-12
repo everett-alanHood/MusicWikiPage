@@ -13,7 +13,7 @@ from tensorflow.keras.preprocessing.text import Tokenizer, text_to_word_sequence
 from tensorflow.keras.regularizers import *
 
 # TF Cloud Training
-from tensorflow_cloud import run
+from tensorflow_cloud import tfc_run
 from tensorflow_cloud.core.docker_config import DockerConfig
 
 # Data processing/visualization
@@ -249,7 +249,7 @@ callbacks = get_callbacks(tenorboard_logs_path, model_cp_path)
 if gct:
     docker = DockerConfig(image_build_bucket=GCS_BUCKET)
 
-    tfc.run(
+    tfc_run(
         requirements_txt="/content/model-requirements.txt",
         distribution_strategy="auto",
         worker_count=3,
