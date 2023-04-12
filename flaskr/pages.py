@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from flaskr.backend import Backend
@@ -88,7 +89,7 @@ def make_endpoints(app, Backend=Backend):
         print(request.args.get("sort_by"))
         if request.args.get("sort_by")=="Popularity":
             sort="Popularity"
-            page_name=Back_end.page_sort_by_popularity()
+            page_names=Back_end.page_sort_by_popularity()
 
             #get list of page names by Popularity
         # default list is equal to Alphabetically
@@ -102,17 +103,42 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
+        
         html_content = Back_end.get_wiki_page(sub_page)
-        csv_file=Back_end.bucket_page_stats[0]
-        list=[]
-        with open(csv_file,"r") as csv_open:
+        bucket=Back_end.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")
+        downloaded_file = blob.download_as_text(encoding="utf-8")
+        page_data_list=list(downloaded_file)
+        index1=0
+        data=[]
+        string=""
+        for line in downloaded_file.split("\n"):
+            line=line.strip()
+            print("The line:"+str(line))
+            list1=line.split(",")
+            print("The list:"+str(list1))
+            print(type(list1[-1]))
+        print("This is the data of :"+str(data))            
+        for index ,character in enumerate(page_data_list):
+            if character == "," or character == "\r" :
+                if character==page_data_list[-1]:
+                    string=string+character
+                data.append(string)
+                string=""
+            elif character != "\n" and character != "\r":
+                string=string+character
+
+        print("This is the data of :"+str(data))
+        print("This is the data of :"+str(page_data_list))
+        print("This is the data of :"+downloaded_file)
+        with open(blob,"r") as csv_open:
             read=csv.reader(csv_open)
             for x in read:
-                list.append()
-        for x in list:
-            if x[0]==sub_page:
-                x[1]+=1
-        with open(csv_file,"w") as csv_open:
+                list.append(x)
+        for page in list:
+            if page[0]==sub_page:
+                page[1]+=1
+        with open(blob,"w") as csv_open:
             for y in list:
                 csv_open.write(list[y][0]+","+list[y][1])       
         

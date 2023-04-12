@@ -9,6 +9,7 @@ import os
 # from markdown import markdown
 import markdown
 import re
+# for csv methods
 import csv
 """
 Args:
@@ -47,7 +48,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
-        self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
+        self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -75,14 +76,14 @@ class Backend:
             name = blob.name.split('.')
             if name[0] in self.sub_pages and name[-1] == 'md':
                 page_names.append(name[0])
-
+                
         page_names.sort()
         return page_names
 
     def page_sort_by_popularity(self):
         csv_file=self.modify_page_analytics()
         list=[]
-        with open(csv_file,"r") as csv_most_viewed:
+        with open(csv_file[0].name,"r") as csv_most_viewed:
             for row in csv_most_viewed:
                 list.append(row)
         print(list)
@@ -104,16 +105,18 @@ class Backend:
         """This check if a subpage analytics doesnt exist inside in the csv 
         and defult the ammount of times that the page was viewed to 0"""
         all_pages=self.get_all_page_names()
-        csv_files=list(self.bucket_page_stats.list_blobs())
+        csv_files_bucket=self.bucket_page_stats
+        blob = csv_files_bucket.get_blob()
+        csv_name=blob.download_as_text(encoding="utf-8")
         csv_list=[]
-        with open(csv_files[0],"a+") as csv_most_viewed:
+        with open(csv_name,"a+") as csv_most_viewed:
             reader = csv.reader(csv_most_viewed)
             for x in reader:
                 csv_list.append(x[0])
             for sub_page in all_pages:
                 if sub_page not in csv_list:
                     csv_most_viewed.write(sub_page,0)
-            return csv_files
+            return blob
 
     def upload(self, content, filename):
         """
