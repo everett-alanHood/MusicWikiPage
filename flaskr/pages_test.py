@@ -156,7 +156,7 @@ def mock_function(mock_SC=True, mock_load_model=True, mock_token=True, length=16
 @pytest.fixture
 def app():
     app = create_app({'TESTING': True,}, 
-                      mocking=mock_function(False, False))
+                      mocking=mock_function())
     return app
 
 
