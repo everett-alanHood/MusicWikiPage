@@ -6,7 +6,7 @@
     <body>
         <div>       
             {% include 'header.html' %}
-            <p>Welcome {{ current_user.name }}</p> {# Name doesnt appear properly #}
+            <p>Welcome {{ current_user.get_name() }}</p> {# Name doesnt appear properly #}
         </div>
     </body>
 </html>

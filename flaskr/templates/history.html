@@ -1,8 +1,13 @@
 {% include 'header.html' %}
 
-{% block page_name %}
 <title>History</title>
+<h1>History of {{current_user.username}}</h1>
+<body>
+    <ol>
+        {% for i in range(0, history_summary|length, 2) %}
+            
+            <li>{{history_summary[i]}}  ||  {{history_summary[i+1]}}</li>
 
-{% for page in history_summary %}
-
-{% endblock %}
+        {% endfor %}
+    </ol>
+</body>
