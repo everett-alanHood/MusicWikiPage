@@ -34,13 +34,15 @@ class Backend:
         all_pages: All valid pages on the wiki (Union of pages and sub_pages)
     """
 
-    def __init__(self, app, SC=storage.Client(), ml_load=load_model):
+    def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
         """
         Args: 
             An App from flask (ex. Flask(__name__) )
         Explain: 
             Initializes and creates necessary attributes for backend
         """
+        SC, ml_load, token_from_json, data_len = calls
+
         test_app = Flask(__name__)
         self.login_manager = LoginManager()
         self.login_manager.init_app(test_app)
@@ -63,6 +65,7 @@ class Backend:
         self.all_pages = self.pages | self.sub_pages
 
         # Pre-Processing for model input
+        self.max_data_len = data_len
         stop_words = stopwords.words('english')
         self.re_sw = re.compile(f"\\b({'|'.join(stop_words)})\\b")
         self.remove_sw = lambda text : self.re_sw.sub('', text)
@@ -71,14 +74,13 @@ class Backend:
         self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
         self.remove = lambda text : self.re_link.sub('', text)
 
-        self.tokenize = None # Download tokenizer used during training
-        self.max_data_len = 1600
-        
         # Store model
-        blob = 'temp_model'
-        model_path = f'gs://minorbugs_model/{blob}/saved_model'
-        self.model = ml_load(model_path)
-
+        path = f'gs://minorbugs_model/temp_model/'
+        self.model = ml_load(f'{path}saved_model')
+        
+        blob = storage_client.bucket('minorbugs_model').blob('temp_model/tokenizer.json')
+        token_json = blob.download_as_string()
+        self.tokenize = token_from_json(token_json)
 
     def get_all_page_names(self):
         """
@@ -163,7 +165,7 @@ class Backend:
                 continue
             line = self.remove(line)
             no_head_url += line
-            
+        print(len(no_head_url), self.max_data_len,'\n*5')
         cleaned_str = self.remove_sw(no_head_url.lower())
         if len(cleaned_str) > self.max_data_len: 
             return False

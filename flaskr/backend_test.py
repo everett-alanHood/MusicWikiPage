@@ -45,6 +45,7 @@ class blob_object:
     def __init__(self, blob_name):
         self.name = blob_name
         self.public_url = False
+        self.uploaded = None
 
     def exists(self):
         if not self.public_url:
@@ -52,24 +53,30 @@ class blob_object:
         else:
             return True
 
-    def _set_public_url(self, url_name):
+    def _set_public_url(self, url_name, *args, **kwargs):
         self.public_url = url_name
 
-    def upload_from_string(self, content):
+    def upload_from_string(self, content, *args, **kwargs):
+        self.uploaded = True
         self.public_url = 'test/test.com'
         self.string_content = content
 
-    def download_as_string(self):
-        return self.string_content.encode('utf-8')
-
-    def upload_from_file(self, content):
+    def upload_from_file(self, content, *args, **kwargs):
+        self.uploaded = True
         self.public_url = 'test/test.com'
         self.file_content = content
 
-    def download_to_filename(self):
-        return self.file_content
+    def download_as_string(self, *args, **kwargs):
+        if self.uploaded:
+            return self.string_content.encode('utf-8')
+        return 'This is a test string from download_as_string'
 
-    def open(self, mode='/'):
+    def download_to_filename(self, *args, **kwargs):
+        if self.uploaded:
+            return self.file_content
+        return 'This is a test from download_to_filename'
+
+    def open(self, *args, **kwargs):
         return ['## The header',
                 'This is the first line [test](test)',
                 'The second line is important',
@@ -78,17 +85,30 @@ class blob_object:
 
 class mock_model_load:
 
-    def __init__ (self, path="any/path"):
+    def __init__ (self, *args, **kwargs):
         pass
 
-    def predict(self, data):
-        return [1,2,3,4,5,6,7,8,9,10]
+    def predict(self, data, *args, **kwargs):
+        return data[::-1]
 
+def mock_tokenizer_from_json(*args, **kwargs):
+    return mock_tokenizer()
+
+class mock_tokenizer:
+    
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def texts_to_sequences(self, data, *args, **kwargs):
+        self.data = data
+        return [1,2,3,4,5]
+    
+    def sequences_to_text(self, data, *args, **kwargs):
+        return list(self.data)[::-1]
 
 def load_user_mock(data):
     mock_user = User_mock(data)
     return mock_user
-
 
 class User_mock:
 
@@ -177,42 +197,45 @@ def invalid_user():
 
 @pytest.fixture
 def summary_name():
-    return 'test_mock'
+    return 'test mock '
 
-def summary_model_true(summary_name):
-    back_end = Backend('app', SC=storage_client_mock(), ml_load=mock_model_load)
+def mock_function(length=1600):
+    return storage_client_mock(), mock_model_load, mock_tokenizer_from_json, length
+
+def test_summary_model_true(summary_name):
+    back_end = Backend('app', mock_function())
     test = back_end.upload_summary(summary_name)
     assert test == True
 
-def summary_model_false(summary_name):
-    back_end = Backend('app', SC=storage_client_mock(), ml_load=mock_model_load)
-    test = back_end.upload_summary(summary_name*180)
+def test_summary_model_false(summary_name):
+    back_end = Backend('app', mock_function(length=5))
+    test = back_end.upload_summary(summary_name)
     assert test == False
 
+
 def test_sign_in_failed(valid_user, invalid_user):
-    back_end = Backend('app', SC=storage_client_mock())
+    back_end = Backend('app', mock_function())
     back_end.sign_up(valid_user)
     valid, data = back_end.sign_in(invalid_user)
     assert valid == False
     assert data == ""
 
-
 def test_sign_in_sucesss(valid_user):
-    back_end = Backend('app', SC=storage_client_mock())
+    back_end = Backend('app', mock_function())
     back_end.sign_up(valid_user)
     valid, data = back_end.sign_in(valid_user)
     assert valid == True
     assert data == "Everett-Alan"
 
 def test_sign_up_failed(valid_user):
-    back_end = Backend('app', SC=storage_client_mock())
+    back_end = Backend('app', mock_function())
     back_end.sign_up(valid_user)
     valid, data = back_end.sign_up(valid_user)
     assert valid == False
     assert data == ""
 
 def test_sign_up_success(valid_user):
-    back_end = Backend('app', SC=storage_client_mock())
+    back_end = Backend('app', mock_function())
     valid, data = back_end.sign_up(valid_user)
     assert valid == True
     assert data == "Everett-Alan"
@@ -269,4 +292,4 @@ def test_get_image():
     assert images in backend_images
 
 
-#test username:test password:test
+# #test username:test password:test

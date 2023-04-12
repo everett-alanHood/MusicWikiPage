@@ -10,6 +10,9 @@ MarkupSafe==2.1.2
 itsdangerous==2.1.2
 Werkzeug==2.2.2
 Flask-Markdown==0.3
+tensorflow
+numpy
+nltk
 #base64
 #hashlib
 #os
