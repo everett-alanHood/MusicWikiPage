@@ -71,7 +71,7 @@ class blob_object:
     def download_as_string(self, *args, **kwargs):
         if self.uploaded:
             return self.string_content.encode('utf-8')
-        return 'This is a test string from download_as_string'
+        return 'This is a test string from download_as_string'.encode('utf-8')
 
     def download_to_filename(self, *args, **kwargs):
         if self.uploaded:
@@ -79,11 +79,13 @@ class blob_object:
         return 'This is a test from download_to_filename'
 
     def open(self, *args, **kwargs):
-        return ['## The header',
+        data = ['## The header',
                 'This is the first line [test](test)',
                 'The second line is important',
                 'Third line is here',
                 'Last line in data' ]
+
+        return [line.encode('utf-8') for line in data]
 
 class mock_model_load:
 
@@ -103,9 +105,9 @@ class mock_tokenizer:
 
     def texts_to_sequences(self, data, *args, **kwargs):
         self.data = data
-        return [1,2,3,4,5]
+        return [[1,2,3,4,5]]
     
-    def sequences_to_text(self, data, *args, **kwargs):
+    def sequences_to_texts(self, data, *args, **kwargs):
         return list(self.data)[::-1]
 
 def load_user_mock(data):

@@ -45,7 +45,6 @@ class bucket_object:
         self.blobz[blob_name] = temp_blob
         return temp_blob
 
-
 class blob_object:
 
     def __init__(self, blob_name):
@@ -75,7 +74,7 @@ class blob_object:
     def download_as_string(self, *args, **kwargs):
         if self.uploaded:
             return self.string_content.encode('utf-8')
-        return 'This is a test string from download_as_string'
+        return 'This is a test string from download_as_string'.encode('utf-8')
 
     def download_to_filename(self, *args, **kwargs):
         if self.uploaded:
@@ -83,11 +82,13 @@ class blob_object:
         return 'This is a test from download_to_filename'
 
     def open(self, *args, **kwargs):
-        return ['## The header',
+        data = ['## The header',
                 'This is the first line [test](test)',
                 'The second line is important',
                 'Third line is here',
                 'Last line in data' ]
+
+        return [line.encode('utf-8') for line in data]
 
 class mock_model_load:
 
