@@ -64,10 +64,11 @@ class Backend:
     def get_history(self):
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
-        print(content)
-        print("content\ngetHistory\n\n")
         content = content.replace('\'', '')
-        return content.strip('][\'').split(', ')
+        content = content.strip('][\'').split(', ')
+        if content[0] == "":
+            return content[1:]
+        return content
     
     def add_to_history(self, page_name):
         user_blob = self.bucket_users.blob(f'{self.current_username}')
@@ -255,6 +256,9 @@ class Backend:
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
+        
+        if len(content) == 2:
+            content.append("")
 
         raw_log = content[2]
         raw_log = raw_log.replace('[', '')
@@ -277,6 +281,6 @@ class Backend:
             return False, ''
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
-        self.current_username = user_name        
+        self.current_username = user_name
 
         return True, name

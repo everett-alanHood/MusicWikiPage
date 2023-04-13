@@ -81,6 +81,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Home page
         """
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("Home")
         return render_template("main.html")
 
     @app.route('/pages')
@@ -164,6 +166,7 @@ def make_endpoints(app, Backend=Backend):
         """
         #if Back_end.current_user.is_authenticated:
         #Back_end.add_to_history("Logged Out")
+        Back_end.current_username = ""
         logout_user()
         return redirect('/')
 
