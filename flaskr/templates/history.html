@@ -1,7 +1,7 @@
 {% include 'header.html' %}
 
 <title>History</title>
-<h1>History of {{current_user.username}}</h1>
+<h1>History of {{user_name}}</h1>
 <body>
     <ol>
         {% for i in range(0, history_summary|length, 2) %}
