@@ -50,8 +50,6 @@ def make_endpoints(app, Backend=Backend):
             return self.id
         
         def get_name(self):
-            print('\n\n\n\n')
-            print(self.name)
             return self.name
 
         def is_authenticated(self):
@@ -81,6 +79,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Home page
         """
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("Home")
         return render_template("main.html")
 
     @app.route('/pages', methods=['GET','POST'])
@@ -180,6 +180,7 @@ def make_endpoints(app, Backend=Backend):
         """
         #if Back_end.current_user.is_authenticated:
         #Back_end.add_to_history("Logged Out")
+        Back_end.current_username = ""
         logout_user()
         return redirect('/')
 
