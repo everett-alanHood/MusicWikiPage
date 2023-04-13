@@ -50,8 +50,6 @@ def make_endpoints(app, Backend=Backend):
             return self.id
         
         def get_name(self):
-            print('\n\n\n\n')
-            print(self.name)
             return self.name
 
         def is_authenticated(self):
