@@ -155,31 +155,32 @@ class Backend:
         returns:
             - True or False
         """
-        
         no_head_url = ''
-        md_blob = self.bucket_content.blob(f'{filename}.md')
+        md_blob = self.bucket_content.blob(filename)
         md_lines = md_blob.open('rb') #blob.read().decode("utf-8")
 
         for line in md_lines:
+            line = line.decode('utf-8')
             if line[0] == '#': 
                 continue
             line = self.remove(line)
             no_head_url += line
-        print(len(no_head_url), self.max_data_len,'\n*5')
+
         cleaned_str = self.remove_sw(no_head_url.lower())
         if len(cleaned_str) > self.max_data_len: 
             return False
 
-        token_data = self.tokenize.texts_to_sequences(cleaned_str)
-        # Pad data (use max_data_len)??
-
-        token_summary = self.model.predict(token_data)
-        list_summary = self.tokenize.sequences_to_text(token_summary)
+        token_data_encode = np.array([self.tokenize.texts_to_sequences([cleaned_str])])[0]
+        data_decode = np.zeros([1, token_data_encode.shape[1]])
+        
+        token_summary = self.model.predict([token_data_encode, data_decode])
+        max_preds = np.argmax(token_summary, axis=-1)+1
+        list_summary = self.tokenize.sequences_to_texts(max_preds)
         str_summary = ''.join(list_summary)
 
-        blob = self.bucket_summary.blob(f'{filename}.md')
+        blob = self.bucket_summary.blob(filename)
         blob.upload_from_string(str_summary)
-
+        
         return True
 
     def url_check(self, file_content, filename):
