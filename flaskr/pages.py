@@ -90,6 +90,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Gets page names from the Backend and sends the user to a page showing all of them as a list of hyperlinks.
         """
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("Pages")
         page_names = Back_end.get_all_page_names()
         sort="Alphabetical"
         print(request.args.get("sort_by"))
@@ -109,9 +111,11 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
+        if Back_end.current_username is not "":
+            sub_page_cap=sub_page.capitalize()
+            Back_end.add_to_history(sub_page_cap)
         html_content = Back_end.get_wiki_page(sub_page)
-        with open(csv_files[0],"w") as csv_most_viewed:
-            if sub_page in 
+        
         return render_template(f'{sub_page}.html', content=html_content)
 
     #@app.route('/pages', methods=['GET'])
@@ -125,6 +129,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Calls Backend to get all Authors information and pictures, then sends the user to the about page that shows all the author's corresponding info.
         """
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("About")
         authors = Back_end.get_about()
         return render_template('about.html', authors=authors)
 
@@ -178,9 +184,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Log out and redirects user to initial page
         """
-        #if Back_end.current_user.is_authenticated:
-        #Back_end.add_to_history("Logged Out")
-        Back_end.current_username = ""
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("Log Out")
         logout_user()
         return redirect('/')
 
@@ -194,6 +199,8 @@ def make_endpoints(app, Backend=Backend):
         POST: Takes the file passed as an input in the form and sents it to the Backend, redirects the user to the Home page.
         """
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("Upload")
         if request.method == 'POST':
             uploaded_file = request.files['upload']
             filename = os.path.basename(uploaded_file.filename)
@@ -274,6 +281,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Calls Backend and fetch images, sends user to the Images page where are images are displayed.
         """
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("Images")
         image_lst = Back_end.get_image()
         return render_template('images.html', image_lst=image_lst)
 
@@ -305,6 +314,8 @@ def make_endpoints(app, Backend=Backend):
 
     @app.route('/history', methods=['GET', 'POST'])
     def history():
+        if Back_end.current_username is not "":
+            Back_end.add_to_history("History")
         history_summary = Back_end.get_history()
         user_name = Back_end.current_username        
         return render_template('history.html', history_summary = history_summary, user_name = user_name)

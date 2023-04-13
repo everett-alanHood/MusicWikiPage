@@ -10,11 +10,8 @@ import os
 # from markdown import markdown
 import markdown
 import re
-<<<<<<< HEAD
 import csv
-=======
 from collections import deque
->>>>>>> 2f7588a3e7bf9b47b25d767a16c26ecdfe483ed1
 """
 Args:
 Explain:
@@ -52,11 +49,8 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
-<<<<<<< HEAD
         self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
-=======
         self.bucket_users.bucket_history = storage_client.bucket('user_history')        
->>>>>>> 2f7588a3e7bf9b47b25d767a16c26ecdfe483ed1
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -67,8 +61,6 @@ class Backend:
             'form', 'dynamics', 'texture'
         }
         self.all_pages = self.pages | self.sub_pages
-<<<<<<< HEAD
-=======
         self.current_username = ""
 
     def get_history(self):
@@ -102,7 +94,6 @@ class Backend:
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
     
->>>>>>> 2f7588a3e7bf9b47b25d767a16c26ecdfe483ed1
     def get_all_page_names(self):
         """
         Args: 
@@ -151,13 +142,7 @@ class Backend:
         all_pages=self.get_all_page_names()
         csv_files=list(self.bucket_page_stats.list_blobs())
         print(str(csv_files))
-        with open(csv_files[0],"a+") as csv_most_viewed:
-            reader = csv.reader(csv_most_viewed)
-            for sub_page in all_pages:
-                for reader 
-                if sub_page not in reader:
-                    csv_most_viewed.write(sub_page,0)
-            return csv_files
+        
 
     def upload(self, content, filename):
         """
