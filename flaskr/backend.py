@@ -11,6 +11,7 @@ import markdown
 import re
 # for csv methods
 import csv
+from collections import deque
 """
 Args:
 Explain:
@@ -49,6 +50,8 @@ class Backend:
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
+        self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
+        self.bucket_users.bucket_history = storage_client.bucket('user_history')        
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -59,6 +62,38 @@ class Backend:
             'form', 'dynamics', 'texture'
         }
         self.all_pages = self.pages | self.sub_pages
+        self.current_username = ""
+
+    def get_history(self):
+        user_blob = self.bucket_users.blob(f'{self.current_username}')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
+        print(content)
+        print("content\ngetHistory\n\n")
+        content = content.replace('\'', '')
+        return content.strip('][\'').split(', ')
+    
+    def add_to_history(self, page_name):
+        user_blob = self.bucket_users.blob(f'{self.current_username}')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')
+        
+        name = content[0]
+        hash_pass = content[1][2:-1].encode('utf-8')
+
+        raw_log = content[2]
+        raw_log = raw_log.replace('[', '')
+        raw_log = raw_log.replace(']', '')
+        raw_log = raw_log.replace('\'', '')
+        raw_log = raw_log.split(', ')
+
+        history = raw_log
+        
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history.append(page_name)
+        history.append(timestamp)
+
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+    
     def get_all_page_names(self):
         """
         Args: 
@@ -148,6 +183,9 @@ class Backend:
             
         blob.upload_from_string(string)
             
+        csv_files=list(self.bucket_page_stats.list_blobs())
+        print(str(csv_files))
+        return csv_files
 
     def upload(self, content, filename):
         """

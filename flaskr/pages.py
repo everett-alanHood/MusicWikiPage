@@ -135,6 +135,7 @@ def make_endpoints(app, Backend=Backend):
         print("This is the data of :"+str(data))
                       
         
+        
         return render_template(f'{sub_page}.html', content=html_content)
 
     #@app.route('/pages', methods=['GET'])
@@ -201,6 +202,8 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Log out and redirects user to initial page
         """
+        if Back_end.current_user.is_authenticated:
+            Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 
@@ -213,6 +216,9 @@ def make_endpoints(app, Backend=Backend):
         GET: Upload Page
         POST: Takes the file passed as an input in the form and sents it to the Backend, redirects the user to the Home page.
         """
+
+        if Back_end.current_user.is_authenticated:
+            Back_end.add_to_history("Upload")
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
         if request.method == 'POST':
             uploaded_file = request.files['upload']
@@ -294,7 +300,7 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Calls Backend and fetch images, sends user to the Images page where are images are displayed.
         """
-        image_lst = Back_end.get_image()
+        image_lst = Back_end.get_image()        
         return render_template('images.html', image_lst=image_lst)
 
     @app.errorhandler(405)
