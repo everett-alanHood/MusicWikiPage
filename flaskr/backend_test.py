@@ -242,7 +242,7 @@ def test_get_image():
     assert images in backend_images
 
 def test_make_popularity_list():
-    be = Backend(app)\
+    be = Backend(app)
     with patch.object(be,
                       'make_popularity_list',
                       return_value=[
