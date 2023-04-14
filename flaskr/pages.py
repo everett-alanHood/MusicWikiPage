@@ -285,6 +285,9 @@ def make_endpoints(app, Backend=Backend):
 
     @app.route('/history', methods=['GET', 'POST'])
     def history():
+        """ When a user views their history it'll list from first to last what they've visited.
+        It uses the information stored in the third line of the user's bucket.
+        """
         history_summary = Back_end.get_history()
-        user_name = Back_end.current_username        
+        user_name = Back_end.current_username
         return render_template('history.html', history_summary = history_summary, user_name = user_name)
