@@ -243,7 +243,7 @@ def test_get_image():
 
 def test_make_popularity_list():
     be = Backend(app)
-    assert be.page_sort_by_popularity()
+    assert type(be.page_sort_by_popularity()) == list
 
 
 #test username:test password:test
