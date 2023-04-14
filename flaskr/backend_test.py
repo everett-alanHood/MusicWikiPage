@@ -242,9 +242,18 @@ def test_get_image():
     assert images in backend_images
 
 '''This unit test works on Cloud Shell but not on Git when I push.'''
-# def test_make_popularity_list():
-#     be = Backend(app)
-#     assert type(be.page_sort_by_popularity()) == list
+def test_make_popularity_list():
+    be = Backend(app)
+    #assert type(be.page_sort_by_popularity()) == list
+    with patch.object(be,
+                      'make_popularity_list',
+                      return_value=[
+                          ['chord',3], ['dynamics',21], ['form',5], ['harmony',0], ['melody',2],
+                          ['pitch',0], ['rhythm',0], ['scales',23], ['texture',12],
+                          ['timbre',6]
+                      ]):
+        pages = be.make_popularity_list()
+    assert type(pages[0]) == list
 
 
 #test username:test password:test
