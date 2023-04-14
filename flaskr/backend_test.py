@@ -241,5 +241,9 @@ def test_get_image():
         backend_images = be.get_image()
     assert images in backend_images
 
+def test_make_popularity_list():
+    be = Backend(app)
+    assert be.page_sort_by_popularity()
+
 
 #test username:test password:test

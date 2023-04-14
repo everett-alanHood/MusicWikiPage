@@ -145,6 +145,7 @@ class Backend:
                 
                 true_data.append(temp.copy())
                 temp.clear()
+        print(true_data)
         return true_data
         
     def page_sort_by_popularity(self):
@@ -161,7 +162,7 @@ class Backend:
                     highest = p_list[find_highest][1]
                     h_index = find_highest
             p_list[next_pop], p_list[h_index] = p_list[h_index], p_list[next_pop]
-
+        
         for page in range(len(p_list)):
             p_list[page] = p_list[page][0]
         
