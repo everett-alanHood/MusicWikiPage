@@ -221,7 +221,7 @@ def test_summary_model_true(summary_name):
     assert test == True # Passes due to lengh of data being in acceptable range i.e. less than max data length
 
 def test_summary_model_false(summary_name): 
-    back_end = Backend('app', mock_function(length=5))
+    back_end = Backend('app', mock_function(length=5)) # length = max data length
     test = back_end.upload_summary(summary_name)
     assert test == False # Fails due to length of data being longer than whats allowed i.e. max data length=5
 

@@ -79,12 +79,6 @@ class Backend:
         blob = storage_client.bucket('minorbugs_model').blob('temp_model/tokenizer.json')
         token_json = blob.download_as_string()
         self.tokenize = token_from_json(token_json)
-    
-    def remove_stop_words(self, text):
-        return self.re_stop_word.sub('', text)
-
-    def remove_links(self, text):
-        return self.re_link.sub('', text)
 
     def get_all_page_names(self):
         """
@@ -146,7 +140,13 @@ class Backend:
             return False # Nothing done with this info, only for testing purposes
         
         return True
-    
+        
+    def remove_stop_words(self, text):
+        return self.re_stop_word.sub('', text)
+
+    def remove_links(self, text):
+        return self.re_link.sub('', text)
+
     def upload_summary(self, filename):
         """
         Pre-Processes and cleans file text, generates

@@ -153,15 +153,16 @@ def mock_function(mock_SC=True, mock_load_model=True, mock_token=True, length=16
     return mocked
 
 
+# See https://flask.palletsprojects.com/en/2.2.x/testing/
+# for more info on testing
+
 ### Note ###
 """ 
 When running tests without the mock function
 being passed through create_app, the tests will
 pass locally but not in pipelines due to a
-permission error when accessing google cloud storage
+permission error when accessing google cloud storage.
 """
-# See https://flask.palletsprojects.com/en/2.2.x/testing/
-# for more info on testing
 @pytest.fixture
 def app(): # Creates app in __init__.py
     app = create_app({'TESTING': True,}, mocking=mock_function())
