@@ -245,7 +245,10 @@ def test_get_about(client):
     resp = client.get("/about")
     assert resp.status_code == 200  #This check that the connection to about is good
     assert b"Your Authors" in resp.data  #This check if the cilent can grabs the data within about
-
+def test_get_page_summary(client):
+    resp = client.get("/subpages/chord")
+    assert resp.status_code == 200  #This check that the connection to about is good
+    assert b"unk" in resp.data  #This check if the cilent can grabs the data within about
 
 # def test_pages(client):
 #     resp = client.get("/pages")

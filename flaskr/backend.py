@@ -116,7 +116,7 @@ class Backend:
         main = markdown.markdown(md_content)
         
         md_blob = self.bucket_summary.blob(f'{page_name}.md')
-        print(self.tokenize.word_to_index["Hello"])
+        print(self.tokenize.word_index["hello"])
         md_content = md_blob.download_as_string().decode('utf-8')
         summary = markdown.markdown(md_content)
         return main,summary
