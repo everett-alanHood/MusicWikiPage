@@ -149,23 +149,9 @@ class Backend:
         
     def page_sort_by_popularity(self):
         self.modify_page_analytics()
-        p_list=self.make_popularity_list()
-        print("\n\n\nThe List")
-        print(p_list)
-        
-        for next_pop in range(0, len(p_list)-1, 1):
-            highest = p_list[next_pop][1]
-            h_index = next_pop
-            for find_highest in range(next_pop, len(p_list), 1):
-                if p_list[find_highest][1] > highest:
-                    highest = p_list[find_highest][1]
-                    h_index = find_highest
-            p_list[next_pop], p_list[h_index] = p_list[h_index], p_list[next_pop]
-
-        for page in range(len(p_list)):
-            p_list[page] = p_list[page][0]
-        
-        return p_list
+        list=self.make_popularity_list()
+        print(list)
+        return list
     def get_wiki_page(self, page_name):
         """
         Args: A page name (Str)
