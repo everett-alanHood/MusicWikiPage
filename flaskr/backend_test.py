@@ -215,16 +215,15 @@ def invalid_user():
 def summary_name():
     return 'test mock '
 
-
-def test_summary_model_true(summary_name):
+def test_summary_model_true(summary_name): 
     back_end = Backend('app', mock_function())
     test = back_end.upload_summary(summary_name)
-    assert test == True
+    assert test == True # Passes due to lengh of data being in acceptable range i.e. less than max data length
 
-def test_summary_model_false(summary_name):
+def test_summary_model_false(summary_name): 
     back_end = Backend('app', mock_function(length=5))
     test = back_end.upload_summary(summary_name)
-    assert test == False
+    assert test == False # Fails due to length of data being longer than whats allowed i.e. max data length=5
 
 def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', mock_function())
@@ -253,7 +252,6 @@ def test_sign_up_success(valid_user):
     assert valid == True
     assert data == "Everett-Alan"
 
-# , mock_function()
 def test_upload_failed(file_failed):
     be = Backend(app, mock_function())
     val = be.upload(file_failed, file_failed.name)
