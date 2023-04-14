@@ -165,7 +165,7 @@ class Backend:
                 continue
             line = self.remove(line)
             no_head_url += line
-
+        
         cleaned_str = self.remove_sw(no_head_url.lower())
         if len(cleaned_str) > self.max_data_len: 
             return False
