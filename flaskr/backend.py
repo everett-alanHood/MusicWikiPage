@@ -111,10 +111,15 @@ class Backend:
         Returns: N/A
         """
         md_blob = self.bucket_content.blob(f'{page_name}.md')
+
         md_content = md_blob.download_as_string().decode('utf-8')
-        html_content = markdown.markdown(md_content)
+        main = markdown.markdown(md_content)
         
-        return html_content
+        md_blob = self.bucket_summary.blob(f'{page_name}.md')
+        print(self.tokenize.word_to_index["Hello"])
+        md_content = md_blob.download_as_string().decode('utf-8')
+        summary = markdown.markdown(md_content)
+        return main,summary
 
     def upload(self, content, filename):
         """
