@@ -149,6 +149,15 @@ class Backend:
         return true_data
         
     def page_sort_by_popularity(self):
+        """
+        Args: 
+            nothing
+        Explain:
+            gets the list of the pages and how often they've been looked at unorganized
+            organizes them by popularity greatest to least
+        Returns:
+            list of pages(str) without number ranking (list)
+        """
         self.modify_page_analytics()
         p_list=self.make_popularity_list()
         print("\n\n\nThe List")
