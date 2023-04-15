@@ -68,8 +68,7 @@ class Backend:
     def get_history(self):
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
-        print(content)
-        print("content\ngetHistory\n\n")
+
         content = content.replace('\'', '')
         return content.strip('][\'').split(', ')
     
@@ -94,7 +93,7 @@ class Backend:
         history.append(timestamp)
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
-    
+
     def get_all_page_names(self):
         """
         Args: 
@@ -116,42 +115,41 @@ class Backend:
         page_names.sort()
         return page_names
         
-    def make_popularity_list(self):
+    def make_popularity_list(self): # test-----------------------------------------------------
         bucket=self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")
         downloaded_file = blob.download_as_text(encoding="utf-8")
         page_data_list=list(downloaded_file)
+
         data=[]
         string=""
         for index ,character in enumerate(page_data_list):
             if (character == "," or character == "\r" or character==page_data_list[-1] )and character != "\n":
-                print(str(page_data_list[-1]))
                 if character==page_data_list[-1]:
                     string=string+character
                 data.append(string)
                 string=""
             elif character != "\n" and character != "\r":
                 string=string+character
+
         temp=[]
         true_data=[]
-        print("This is the data of :"+str(data))
         for index , pairs in enumerate (data):
             temp.append(pairs)            
-            print(str(index))
             
             if index%2==1:
-                print(str(temp))
                 temp[1]=int(temp[1])
                 
                 true_data.append(temp.copy())
                 temp.clear()
+        
         return true_data
         
-    def page_sort_by_popularity(self):
+    def page_sort_by_popularity(self): # test-----------------------------------------------------
         self.modify_page_analytics()
-        list=self.make_popularity_list()
-        print(list)
-        return list
+        pop_list = self.make_popularity_list()
+        return pop_list
+
     def get_wiki_page(self, page_name):
         """
         Args: A page name (Str)
@@ -165,28 +163,27 @@ class Backend:
         
         return html_content
     
-    def modify_page_analytics(self):
+    def modify_page_analytics(self): # test-----------------------------------------------------
         """This check if a subpage analytics doesnt exist inside in the csv 
         and defult the ammount of times that the page was viewed to 0"""
-        all_pages=self.get_all_page_names()
-        bucket=self.bucket_page_stats
+        all_pages = self.get_all_page_names()
+        bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")
-        csv_list=self.make_popularity_list()
+        csv_list = self.make_popularity_list()
+        
         names=[]
         string=""
         for x in csv_list:
             string=string+x[0]+","+str(x[1])+"\r\n"
             names.append(x[0])
+
         for sub_page in all_pages:
             if sub_page not in names:
                 names.append(sub_page)
                 string=string+sub_page+","+str(0)+"\r\n"
             
         blob.upload_from_string(string)
-            
-        csv_files=list(self.bucket_page_stats.list_blobs())
-        print(str(csv_files))
-        return csv_files
+        return string
 
     def upload(self, content, filename):
         """
