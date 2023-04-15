@@ -145,7 +145,7 @@ def make_endpoints(app, Backend):
 
         user = load_user(data)
         login_user(user)
-        # TODO: current_user.name will always use the ID. 
+        # TODO: current_user.name will always use the ID.
         # Need to get the name in python and inject into the template.
         return redirect(url_for('welcome'))
 
