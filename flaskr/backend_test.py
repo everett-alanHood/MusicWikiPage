@@ -12,8 +12,9 @@ class storage_client_mock:
         self.blobs = blobs
         self.blob_data = dict()
         for key in blob_data:
-            lower_key = key.lower()
-            self.blob_data[lower_key] = blob_data[key]
+            if type(key) == str:
+                lower_key = key.lower()
+                self.blob_data[lower_key] = blob_data[key]
         
         self.bucketz = dict()
 
@@ -36,11 +37,11 @@ class bucket_object:
         self.bucket_name = bucket_name
         self.blobz = dict()
 
-        for name in blobs:
-            self.blobz[blob] = blob_object(name)
+        for name in data:
+            self.blobz[name] = blob_object(name)
 
     def list_blobs(self):
-        return self.blobz
+        return list(self.blobz.values())
 
     def blob(self, blob_name):
         blob_name = blob_name.lower()
@@ -289,42 +290,37 @@ def test_get_image():
         backend_images = be.get_image()
     assert images in backend_images
 
+def test_make_popularity_list():
+    be = Backend(app)
+    with patch.object(be,
+                      'make_popularity_list',
+                       return_value=[
+                          ['chord',3], ['dynamics',21], ['form',5], ['harmony',0], ['melody',2],
+                          ['pitch',0], ['rhythm',0], ['scales',23], ['texture',12],
+                          ['timbre',6]
+                      ]):
+        pages = be.make_popularity_list()
+    assert type(pages[0]) == list
+
 
 #test username:test password:test
 
-"""
-# @pytest.fixture
-# def mock_make_pop_list():
-#     mock_gc = MagicMock()
 
-#     buckets = dict()
-#     def bucket_return_value(x):
-#         if x in buckets:
-#             return buckets[x]
-#         else:
-#             buckets[x] = MagicMock()
-#     mock_gc.bucket.return_value = bucket_return_value
-    
-#     mock_blob = MagicMock()
-#     mock_bucket.blob.return_value = mock_blob
-#     mock_bucket.get_blob
-"""
 
 # ----------------------START-----------------------------
 ### If using blob_test, follow format ###
         # blob_test = {<name_of_blob>.<extension> : test data,
         #              <name_of_blob>.<extension> : test data}
 
-def test_make_popularity_list():
+def test_make_popularity_list_other():
     test_info = {"Dictionary by Popularity.csv": 
                  'hello,4\n\rthere,3\n\rworld,1\n\r'}
-    back_end = Backend('app', SC=storage_client_mock(blob_test=test_info))
+    back_end = Backend('app', SC=storage_client_mock(blob_data=test_info))
     
     make_actual = back_end.make_popularity_list()
     expected = [['hello',4], ['there',3], ['world',1]]
     
-    for exp, act in zip(expected, make_actual):
-        assert exp == act
+    assert expected == make_actual
 
 def test_page_sort_by_pop():
     test_info = {"Dictionary by Popularity.csv": 
@@ -336,14 +332,13 @@ def test_page_sort_by_pop():
     assert expected == pop_actual
 
 def test_sort_alpha():
-    test_info = ['world', 'there', 'hello']
-    back_end = Backend('app', SC=storage_client_mock(blob_data=test_info))
+    test_info = ['world.md', 'there.md', 'hello.md']
+    back_end = Backend('app', SC=storage_client_mock(blobs=test_info))
     
     alpha_actual = back_end.get_all_page_names()
     expected = ['hello', 'there', 'world']
     
     assert expected == alpha_actual
-
 
 def test_modify_page_analytics():
     test_info = {"Dictionary by Popularity.csv": 
@@ -365,3 +360,4 @@ def test_pop_increment():
     assert 'hello,2\r\nthere,3\r\nworld,2\r\n' == incr_actual
 
 # ----------------------END-----------------------------
+

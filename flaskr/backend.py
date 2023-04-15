@@ -103,15 +103,14 @@ class Backend:
         """
         all_blobs = list(self.bucket_content.list_blobs())
         #Could add a feature where users upload their own content??
-
+        
         page_names = []
         for blob in all_blobs:
             name = blob.name.split('.')
-            if name[0] in self.sub_pages and name[-1] == 'md':
+            if name[-1] == 'md':
                 page_names.append(name[0])
                 
         page_names.sort()
-        print(page_names)
         return page_names
         
     def make_popularity_list(self):
@@ -154,15 +153,32 @@ class Backend:
         
     def page_sort_by_popularity(self):
         """
-        
-        Args:
-            - 
+        Args: 
+            nothing
+        Explain:
+            gets the list of the pages and how often they've been looked at unorganized
+            organizes them by popularity greatest to least
         Returns:
-            - 
+            list of pages(str) without number ranking (list)
         """
         self.modify_page_analytics()
-        pop_list = self.make_popularity_list()
-        return pop_list
+        p_list=self.make_popularity_list()
+        print("\n\n\nThe List")
+        print(p_list)
+        
+        for next_pop in range(0, len(p_list)-1, 1):
+            highest = p_list[next_pop][1]
+            h_index = next_pop
+            for find_highest in range(next_pop, len(p_list), 1):
+                if p_list[find_highest][1] > highest:
+                    highest = p_list[find_highest][1]
+                    h_index = find_highest
+            p_list[next_pop], p_list[h_index] = p_list[h_index], p_list[next_pop]
+        
+        for page in range(len(p_list)):
+            p_list[page] = p_list[page][0]
+        
+        return p_list
 
     def get_wiki_page(self, page_name):
         """
