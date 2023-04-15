@@ -93,6 +93,7 @@ def make_endpoints(app, Backend):
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
         html_content = Back_end.get_wiki_page(sub_page)
+        # TODO: replace with single template instead of the dynamic {sub_page}.html
         return render_template(f'{sub_page}.html', content=html_content)
 
     @app.route('/about')
@@ -144,7 +145,8 @@ def make_endpoints(app, Backend):
 
         user = load_user(data)
         login_user(user)
-
+        # TODO: current_user.name will always use the ID. 
+        # Need to get the name in python and inject into the template.
         return redirect(url_for('welcome'))
 
     @app.route('/logout')
@@ -194,6 +196,7 @@ def make_endpoints(app, Backend):
                                        error='Incorrect File Type')
         return render_template('upload.html')
 
+    # TODO Get rid of this, and just replace with Back_end.upload
     def uploadImage(f, filename):
         """Calls upon the Backend object upload method, passing a IO object
         and a String representing the file and its filename respectively.
