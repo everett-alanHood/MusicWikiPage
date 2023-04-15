@@ -36,7 +36,7 @@ def client(app):
 
 def test_page_sort_alpha(client, mock_backend):
     mock_backend.get_all_page_names.return_value = ['a_test', 'b_test', 'c_test']
-    resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
+    resp = client.get('/pages', query_string={'sort_by': 'Alphabetical'})
     
     assert resp.status_code == 200
     str_data = resp.data.decode('utf-8')
@@ -46,7 +46,6 @@ def test_page_sort_alpha(client, mock_backend):
 
 def test_page_sort_pop(client, mock_backend):
     mock_backend.page_sort_by_popularity.return_value = ['3_test', '2_test', '1_test']
-    
     resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
     
     assert resp.status_code == 200
