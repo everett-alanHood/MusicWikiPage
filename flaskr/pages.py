@@ -136,7 +136,7 @@ def make_endpoints(app, Backend=Backend):
                       
         
         
-        return render_template(f'{sub_page}.html', content=html_content)
+        return render_template(f'sub_pages.html', content=html_content)
 
     #@app.route('/pages', methods=['GET'])
     #def dropdown():
@@ -202,8 +202,9 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Log out and redirects user to initial page
         """
-        if Back_end.current_user.is_authenticated:
-            Back_end.add_to_history("Logged Out")
+        if Back_end.current_username !="":
+            if Back_end.current_user.is_authenticated:
+                Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 
