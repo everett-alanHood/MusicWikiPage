@@ -6,95 +6,27 @@ from flaskr import create_app
 import pytest
 
 
-class storage_client_mock:
+### From Brian Noyama's test changes ###
 
-    def __init__(self, app_mock=None):
-        pass
+@pytest.fixture
+def mock_backend():
+    mock_backend = MagicMock()
+    # Set the initializer to return the same mock.
+    mock_backend.return_value = mock_backend
+    return mock_backend
 
-    def bucket(self, bucket_name):
-        return bucket_object(bucket_name)
+@pytest.fixture
+def app(mock_backend):
+    app = create_app({
+        'TESTING': True,
+        'LOGIN_DISABLED': True,
+    }, mock_backend)
+    return app
 
-
-class bucket_object:
-
-    def __init__(self, bucket_name):
-        self.bucket_name = bucket_name
-        self.blobz = dict()
-
-    def list_blobs(self):
-        return self.blobz
-
-    def blob(self, blob_name, user_info=False):
-        blob_name = blob_name.lower()
-
-        if blob_name in self.blobz:
-            return self.blobz[blob_name]
-
-        temp_blob = blob_object(blob_name, user_info)
-        self.blobz[blob_name] = temp_blob
-        return temp_blob
-
-
-class blob_object:
-
-    def __init__(self, blob_name, user_info=False):
-        self.name = blob_name
-        self.info = user_info
-
-    def exists(self):
-        if self.info:
-            return True
-        else:
-            return False
-
-    def set_public_url(self, url_name):
-        self.public_url = url_name
-
-    def upload_from_string(self, content):
-        self.string_content = content
-
-    def download_as_string(self, content):
-        return self.string_content
-
-    def upload_from_file(self, content):
-        self.file_content = content
-
-    def download_to_filename(self, file_path):
-        return self.file_content
-
-
-def load_user_mock(data):
-    mock_user = User_mock(data)
-    return mock_user
-
-
-class User_mock:
-
-    def __init__(self, name):
-        self.name = name
-        self.id = 10
-
-    def get_id(self):
-        return self.id
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
+########################################
 
 # See https://flask.palletsprojects.com/en/2.2.x/testing/
 # for more info on testing
-@pytest.fixture
-def app():
-    app = create_app({
-        'TESTING': True,
-    })
-    return app
 
 
 @pytest.fixture
@@ -102,12 +34,29 @@ def client(app):
     return app.test_client()
 
 
-def mock_blob():
-    pass
+def test_page_sort_alpha(client, mock_backend):
+    mock_backend.get_all_page_names.return_value = ['a_test', 'b_test', 'c_test']
+    resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
+    
+    assert resp.status_code == 200
+    str_data = resp.data.decode('utf-8')
+    a_idx, b_idx, c_idx = str_data.find('a_test'), str_data.find('b_test'), str_data.find('c_test')
+    assert -1 < a_idx < b_idx < c_idx
 
 
-# TODO(Checkpoint (groups of 4 only) Requirement 4): Change test to
-# match the changes made in the other Checkpoint Requirements.
+def test_page_sort_pop(client, mock_backend):
+    mock_backend.page_sort_by_popularity.return_value = ['3_test', '2_test', '1_test']
+    
+    resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
+    
+    assert resp.status_code == 200
+    str_data = resp.data.decode('utf-8')
+    print(str_data)
+    a_idx, b_idx, c_idx = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
+    assert -1 < a_idx < b_idx < c_idx
+    
+
+
 def test_home_page(client):
     resp = client.get("/")
     #@patchPage
@@ -118,9 +67,9 @@ def test_home_page(client):
 
 # TODO(Project 1): Write tests for other routes.
 def test_sign_up_success():
-    client = storage_client_mock()
-    bucket = client.bucket('users')
-    blob = bucket.blob('hi')
+    # client = storage_client_mock()
+    # bucket = client.bucket('users')
+    # blob = bucket.blob('hi')
 
     user_check = {"name": "test", "username": "hell", "password": "testhello"}
 
@@ -139,7 +88,6 @@ def test_sign_up_failed():
 
 
 def test_logout(client):
-    #test is_authenticated ==None else assert error
     pass
 
 
@@ -205,3 +153,4 @@ def test_get_about(client):
 
 
 # user vincent username is username and password is password
+

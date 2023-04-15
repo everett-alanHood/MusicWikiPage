@@ -25,7 +25,6 @@ class Backend:
     """
     Explain
 
-    
     Attributes:
         bucket_content: 
         bucket_users: 
@@ -51,7 +50,6 @@ class Backend:
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
-        self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
         self.bucket_users.bucket_history = storage_client.bucket('user_history')        
         #page urls
         self.pages = {
@@ -113,13 +111,22 @@ class Backend:
                 page_names.append(name[0])
                 
         page_names.sort()
+        print('i was here\n'*5)
         return page_names
         
-    def make_popularity_list(self): # test-----------------------------------------------------
-        bucket=self.bucket_page_stats
+    def make_popularity_list(self):
+        """
+        Creates matrix of page names and 
+        number times each page was visited.
+        Args:
+            - None
+        Returns:
+            - Matrix made of str and int 
+        """
+        bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")
         downloaded_file = blob.download_as_text(encoding="utf-8")
-        page_data_list=list(downloaded_file)
+        page_data_list = list(downloaded_file)
 
         data=[]
         string=""
@@ -145,27 +152,58 @@ class Backend:
         
         return true_data
         
-    def page_sort_by_popularity(self): # test-----------------------------------------------------
+    def page_sort_by_popularity(self):
+        """
+        
+        Args:
+            - 
+        Returns:
+            - 
+        """
         self.modify_page_analytics()
         pop_list = self.make_popularity_list()
         return pop_list
 
     def get_wiki_page(self, page_name):
         """
-        Args: A page name (Str)
-        Explain: Converts a specific markdown file to html, 
-                 adds the header, and stores that in local files.
-        Returns: N/A
+        Increments popularity value of sub page
+        and converts a markdown file to HTML.       
+        Args: 
+            - Sub page name (Str)
+        Returns:
+            - HTML content (str)
         """
+        ### Transfered from pages.py ###
+        bucket = self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")        
+        data = self.make_popularity_list()
+        string = ""
+
+        for index, pairs in enumerate(data):
+            if pairs[0] == page_name:
+                pairs[1] += 1
+
+        string = ""
+        for index in data:
+            string = string + index[0] + "," + str(index[1]) + "\r\n"
+        
+        blob.upload_from_string(string)
+        ################################
+
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown.markdown(md_content)
         
         return html_content
     
-    def modify_page_analytics(self): # test-----------------------------------------------------
+    def modify_page_analytics(self):
         """This check if a subpage analytics doesnt exist inside in the csv 
-        and defult the ammount of times that the page was viewed to 0"""
+        and defult the ammount of times that the page was viewed to 0
+        Args:
+            - None
+        Returns:
+            - str (Only used in testing)
+        """
         all_pages = self.get_all_page_names()
         bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")

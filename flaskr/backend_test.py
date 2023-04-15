@@ -341,4 +341,15 @@ def test_modify_page_analytics():
     modify_actual = back_end.modify_page_analytics()
     assert 'hello,1\r\nthere,3\r\nworld,2\r\n' == modify_actual
 
+def test_pop_increment():
+    test_info = {"Dictionary by Popularity.csv": 
+                 'hello,1\n\rthere,3\n\rworld,2\n\r'}
+    back_end = Backend('app', SC=storage_client_mock(blob_test=test_info))
+    back_end.get_wiki_page('hello')
+
+    blob = back_end.bucket_page_stats.get_blob('Dictionary by Popularity.csv')
+    incr_actual = blob.download_as_text()
+    print(incr_actual)
+    assert 'hello,2\r\nthere,3\r\nworld,2\r\n' == incr_actual
+
 # ----------------------END-----------------------------

@@ -86,7 +86,7 @@ def make_endpoints(app, Backend=Backend):
         """
         page_names = Back_end.get_all_page_names()
         sort="Alphabetical"
-        print(request.args.get("sort_by"))
+
         if request.args.get("sort_by")=="Popularity":
             sort="Popularity"
             page_names=Back_end.page_sort_by_popularity()
@@ -102,13 +102,6 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        
-        html_content = Back_end.get_wiki_page(sub_page)
-        bucket=Back_end.bucket_page_stats
-        blob = bucket.get_blob("Dictionary by Popularity.csv")        
-        data=Back_end.make_popularity_list()
-        print(data)
-        string=""
         """
         for line in downloaded_file.split("\n"):
             line=line.strip()
@@ -119,23 +112,23 @@ def make_endpoints(app, Backend=Backend):
             list1[-1]=int(list1[-1])
             data.append(list)
         """ 
-        temp=[]
+
+        # bucket = Back_end.bucket_page_stats
+        # blob = bucket.get_blob("Dictionary by Popularity.csv")        
+        # data = Back_end.make_popularity_list()
+        # string = ""
         
-        print("This is the data of :"+str(data))
-        for index , pairs in enumerate (data):
-            if pairs[0]==sub_page:
-                pairs[1]+=1
-        print(str(data))          
-        string=""
-        for index in data:
-            string=string+index[0]+","+str(index[1])+"\r\n"
+        # for index, pairs in enumerate(data):
+        #     if pairs[0] == sub_page:
+        #         pairs[1] += 1
+
+        # string = ""
+        # for index in data:
+        #     string = string + index[0] + "," + str(index[1]) + "\r\n"
         
-        print(string)
-        blob.upload_from_string(string)
-        print("This is the data of :"+str(data))
-                      
+        # blob.upload_from_string(string)
         
-        
+        html_content = Back_end.get_wiki_page(sub_page)         
         return render_template(f'{sub_page}.html', content=html_content)
 
     #@app.route('/pages', methods=['GET'])
@@ -247,6 +240,7 @@ def make_endpoints(app, Backend=Backend):
                 render_template('upload.html', error='Incorrect File Type')
 
         return render_template('upload.html')
+
 
     def uploadImage(f, filename):
         """Calls upon the Backend object upload method, passing a IO object
