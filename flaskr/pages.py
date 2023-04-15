@@ -8,7 +8,7 @@ import zipfile
 from flaskext.markdown import Markdown
 
 
-def make_endpoints(app, Backend=Backend, calls=None):
+def make_endpoints(app, backend=Backend):
     """Connects the frontend with the established routes and the backend.
 
     Attributes:
@@ -21,10 +21,7 @@ def make_endpoints(app, Backend=Backend, calls=None):
     login_manager.init_app(app)
     login_manager.session_protection = 'strong'
     Markdown(app)
-    if calls:
-        Back_end = Backend(app, calls=calls)
-    else:
-        Back_end = Backend(app)
+    Back_end = backend(app)
 
     class User(UserMixin):
         """User Class that is used by the Login Manager and browser.
