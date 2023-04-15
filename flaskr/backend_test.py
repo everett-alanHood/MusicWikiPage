@@ -5,15 +5,16 @@ import pytest
 
 class storage_client_mock:
 
-    def __init__(self, app_mock=None, blob_test=dict()):
+    def __init__(self, app_mock=None, blobs=[], blob_data=dict()):
         ### If using blob_test, follow format ###
         # blob_test = {<name_of_blob>.<extension> : test data,
         #              <name_of_blob>.<extension> : test data}
-        self.blob_test = dict()
-        for key in blob_test:
+        self.blobs = blobs
+        self.blob_data = dict()
+        for key in blob_data:
             lower_key = key.lower()
-            self.blob_test[lower_key] = blob_test[key]
-        del blob_test
+            self.blob_data[lower_key] = blob_data[key]
+        
         self.bucketz = dict()
 
     def list_buckets(self):
@@ -23,17 +24,20 @@ class storage_client_mock:
         if bucket_name in self.bucketz:
             return self.bucketz[bucket_name]
 
-        temp_bucket = bucket_object(bucket_name, self.blob_test)
+        temp_bucket = bucket_object(bucket_name, self.blobs, self.blob_data)
         self.bucketz[bucket_name] = temp_bucket
         return temp_bucket
 
 
 class bucket_object:
 
-    def __init__(self, bucket_name, blob_test):
-        self.blob_test = blob_test
+    def __init__(self, bucket_name, data, blob_data):
+        self.blob_data = blob_data
         self.bucket_name = bucket_name
         self.blobz = dict()
+
+        for name in blobs:
+            self.blobz[blob] = blob_object(name)
 
     def list_blobs(self):
         return self.blobz
@@ -44,8 +48,8 @@ class bucket_object:
         if blob_name in self.blobz:
             return self.blobz[blob_name]
 
-        if blob_name in self.blob_test:
-            temp_blob = blob_object(blob_name, test_data=self.blob_test[blob_name])
+        if blob_name in self.blob_data:
+            temp_blob = blob_object(blob_name, test_data=self.blob_data[blob_name])
         else:
             temp_blob = blob_object(blob_name)
 
@@ -324,19 +328,27 @@ def test_make_popularity_list():
 
 def test_page_sort_by_pop():
     test_info = {"Dictionary by Popularity.csv": 
-                 'hello,4\n\rthere,3\n\rworld,1\n\r'}
-    back_end = Backend('app', SC=storage_client_mock(blob_test=test_info))
+                 'hello,1\n\rthere,3\n\rworld,4\n\r'}
+    back_end = Backend('app', SC=storage_client_mock(blob_data=test_info))
     
     pop_actual = back_end.page_sort_by_popularity()
-    expected = [['hello',4], ['there',3], ['world',1]]
+    expected = ['world', 'there', 'hello']
+    assert expected == pop_actual
 
-    for exp, act in zip(expected, pop_actual):
-        assert exp == act
+def test_sort_alpha():
+    test_info = ['world', 'there', 'hello']
+    back_end = Backend('app', SC=storage_client_mock(blob_data=test_info))
+    
+    alpha_actual = back_end.get_all_page_names()
+    expected = ['hello', 'there', 'world']
+    
+    assert expected == alpha_actual
+
 
 def test_modify_page_analytics():
     test_info = {"Dictionary by Popularity.csv": 
                  'hello,1\n\rthere,3\n\rworld,2\n\r'}
-    back_end = Backend('app', SC=storage_client_mock(blob_test=test_info))
+    back_end = Backend('app', SC=storage_client_mock(blob_data=test_info))
     
     modify_actual = back_end.modify_page_analytics()
     assert 'hello,1\r\nthere,3\r\nworld,2\r\n' == modify_actual
@@ -344,7 +356,7 @@ def test_modify_page_analytics():
 def test_pop_increment():
     test_info = {"Dictionary by Popularity.csv": 
                  'hello,1\n\rthere,3\n\rworld,2\n\r'}
-    back_end = Backend('app', SC=storage_client_mock(blob_test=test_info))
+    back_end = Backend('app', SC=storage_client_mock(blob_data=test_info))
     back_end.get_wiki_page('hello')
 
     blob = back_end.bucket_page_stats.get_blob('Dictionary by Popularity.csv')

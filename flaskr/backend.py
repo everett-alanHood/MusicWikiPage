@@ -111,7 +111,7 @@ class Backend:
                 page_names.append(name[0])
                 
         page_names.sort()
-        print('i was here\n'*5)
+        print(page_names)
         return page_names
         
     def make_popularity_list(self):
