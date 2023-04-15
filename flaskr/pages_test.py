@@ -51,8 +51,8 @@ def test_page_sort_pop(client, mock_backend):
     assert resp.status_code == 200
     str_data = resp.data.decode('utf-8')
     print(str_data)
-    a_idx, b_idx, c_idx = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
-    assert -1 < a_idx < b_idx < c_idx
+    idx_3, idx_2, idx_1 = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
+    assert -1 < idx_3 < idx_2 < idx_1
     
 
 
