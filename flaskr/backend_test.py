@@ -7,19 +7,6 @@ from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from flaskr.mock_test import storage_client_mock, mock_model_load, mock_tokenizer_from_json
 
 
-def mock_function(mock_SC=True, mock_load_model=True, mock_token=True, length=1600):
-    mocked = [storage_client_mock(), mock_model_load, mock_tokenizer_from_json, length]
-    
-    if not mock_SC:
-        mocked[0] = storage.Client()
-    if not mock_load_model:
-        mocked[1] = load_model
-    if not mock_token:
-        mocked[2] = tokenizer_from_json
-        
-    return mocked
-
-
 @pytest.fixture
 def app():
     app = create_app({
@@ -83,17 +70,70 @@ def invalid_user():
 
 @pytest.fixture
 def summary_name():
-    return 'test mock '
+    return 'test_mock '
 
-def test_summary_model_true(summary_name): 
-    back_end = Backend('app', mock_function())
-    test = back_end.upload_summary(summary_name)
-    assert test == True # Passes due to lengh of data being in acceptable range i.e. less than max data length
+def mock_function(mock_SC=True, mock_SC_blobs=dict(), 
+                  mock_model=True, mock_token=True, 
+                  length=1600):
+    mocked = [None, mock_model_load, mock_tokenizer_from_json, length]
+    
+    if not mock_SC:
+        mocked[0] = storage.Client()
+    else:
+        mocked[0] = storage_client_mock(mock_SC_blobs)
+    if not mock_model:
+        mocked[1] = load_model
+    if not mock_token:
+        mocked[2] = tokenizer_from_json
+        
+    return mocked
 
-def test_summary_model_false(summary_name): 
-    back_end = Backend('app', mock_function(length=5)) # length = max data length
+def test_summary_model_pass(summary_name): 
+    # Passes due to lengh of data being in acceptable range 
+    # i.e. less than max data length
+    test_lst = ['## The header',
+                'This is the first line [test](test)',
+                'The second line is important',
+                'Third line is here',
+                'Last line in data' ]
+    test_data = {summary_name : test_lst}
+
+    mock_func = mock_function(mock_SC_blobs=test_data)
+    back_end = Backend('app', mock_func)
+
     test = back_end.upload_summary(summary_name)
-    assert test == False # Fails due to length of data being longer than whats allowed i.e. max data length=5
+    assert test == True 
+
+def test_summary_model_fail(summary_name): 
+    # Fails due to lengh of data being outside acceptable range  
+    # i.e. lengh of data > max data length
+    test_lst = ['## The header',
+                'This is the first line [test](test)',
+                'The second line is important',
+                'Third line is here',
+                'Last line in data' ]
+    test_data = {summary_name : test_lst}
+
+    mock_func = mock_function(mock_SC_blobs=test_data, length=5) # length = max data length
+    back_end = Backend('app', mock_func)
+    test = back_end.upload_summary(summary_name)
+    assert test == False
+
+def test_summary_uploaded(summary_name):
+    test_lst = ['## The header',
+                'This is the first line [test](test)',
+                'The second line is important',
+                'Third line is here',
+                'Last line in data' ]
+    test_data = {summary_name : test_lst}
+
+    mock_func = mock_function(mock_SC_blobs=test_data)
+    back_end = Backend('app', mock_func)
+    
+    test = back_end.upload_summary(summary_name)
+    assert test == True
+    actual = back_end.bucket_summary.blob(summary_name).download_as_text()
+    assert 'hello there world' in actual
 
 def test_sign_in_failed(valid_user, invalid_user):
     back_end = Backend('app', mock_function())

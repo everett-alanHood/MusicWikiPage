@@ -1,11 +1,11 @@
 
 class storage_client_mock:
 
-    def __init__(self, app_mock=None, blobs=[], blob_data=dict()):
+    def __init__(self, blob_data=dict()):
         ### If using blob_test, follow format ###
         # blob_test = {<name_of_blob>.<extension> : test data,
         #              <name_of_blob>.<extension> : test data}
-        self.blobs = blobs
+
         self.blob_data = dict()
         for key in blob_data:
             if type(key) == str:
@@ -21,20 +21,20 @@ class storage_client_mock:
         if bucket_name in self.bucketz:
             return self.bucketz[bucket_name]
 
-        temp_bucket = bucket_object(bucket_name, self.blobs, self.blob_data)
+        temp_bucket = bucket_object(bucket_name, self.blob_data)
         self.bucketz[bucket_name] = temp_bucket
         return temp_bucket
 
 
 class bucket_object:
 
-    def __init__(self, bucket_name, data, blob_data):
+    def __init__(self, bucket_name, blob_data):
         self.blob_data = blob_data
         self.bucket_name = bucket_name
         self.blobz = dict()
 
-        for name in data:
-            self.blobz[name] = blob_object(name)
+        for name in blob_data:
+            self.blobz[name] = blob_object(name, blob_data[name])
 
     def list_blobs(self):
         return list(self.blobz.values())
@@ -45,11 +45,7 @@ class bucket_object:
         if blob_name in self.blobz:
             return self.blobz[blob_name]
 
-        if blob_name in self.blob_data:
-            temp_blob = blob_object(blob_name, test_data=self.blob_data[blob_name])
-        else:
-            temp_blob = blob_object(blob_name)
-
+        temp_blob = blob_object(blob_name)
         self.blobz[blob_name] = temp_blob
         return temp_blob
 
@@ -103,13 +99,11 @@ class blob_object:
             return self.file_content
         return 'This is a test from download_to_filename'
 
-    def open(self, mode=None):
-                
-        data = ['## The header',
-                'This is the first line [test](test)',
-                'The second line is important',
-                'Third line is here',
-                'Last line in data' ]
+    def open(self, mode=None): 
+        if self.test_data:
+            data =  self.test_data       
+        else:
+            raise ValueError
 
         return [line.encode('utf-8') for line in data]
 
@@ -120,7 +114,12 @@ class mock_model_load:
         pass
 
     def predict(self, data, *args, **kwargs):
-        return data[::-1]
+        preds = [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.2, 0.3, 0.4, 0.1],
+            [0.3, 0.4, 0.1, 0.2]
+        ]
+        return preds
 
 
 def mock_tokenizer_from_json(*args, **kwargs):
@@ -130,14 +129,13 @@ def mock_tokenizer_from_json(*args, **kwargs):
 class mock_tokenizer:
     
     def __init__(self, *args, **kwargs):
-        pass
+        self.text = ['unk', 'world', 'there', 'hello']
 
-    def texts_to_sequences(self, data, *args, **kwargs):
-        self.data = data
-        return [[1,2,3,4,5]]
+    def texts_to_sequences(self, data, *args, **kwargs):                      
+        return [[1,2,3]]
     
     def sequences_to_texts(self, data, *args, **kwargs):
-        return list(self.data)[::-1]
+        return [self.text[idx] for idx in data]
 
 
 def load_user_mock(data):

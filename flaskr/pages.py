@@ -259,7 +259,7 @@ def make_endpoints(app, backend=Backend):
             error: Error number representing the type of error the user got.
         """
         flash('Incorrect method used, try again')
-        return redirect(url_for('/')), 405
+        return redirect(url_for('/'))
 
     """
     {% with messages = get_flashed_messages() %}
