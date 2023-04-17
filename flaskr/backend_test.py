@@ -67,11 +67,6 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
-
-@pytest.fixture
-def summary_name():
-    return 'test_mock '
-
 def mock_function(mock_SC=True, mock_SC_blobs=dict(), 
                   mock_model=True, mock_token=True, 
                   length=1600):
@@ -88,15 +83,24 @@ def mock_function(mock_SC=True, mock_SC_blobs=dict(),
         
     return mocked
 
-def test_summary_model_pass(summary_name): 
+
+@pytest.fixture
+def summary_name():
+    return 'test_mock '
+
+@pytest.fixture
+def summary_lst_data():
+    summary_data = ['## The header',
+                    'This is the first line [test](test)',
+                    'The second line is important',
+                    'Third line is here',
+                    'Last line in data' ]
+    return summary_data
+
+def test_summary_model_pass(summary_name, summary_lst_data): 
     # Passes due to lengh of data being in acceptable range 
     # i.e. less than max data length
-    test_lst = ['## The header',
-                'This is the first line [test](test)',
-                'The second line is important',
-                'Third line is here',
-                'Last line in data' ]
-    test_data = {summary_name : test_lst}
+    test_data = {summary_name : summary_lst_data}
 
     mock_func = mock_function(mock_SC_blobs=test_data)
     back_end = Backend('app', mock_func)
@@ -104,28 +108,20 @@ def test_summary_model_pass(summary_name):
     test = back_end.upload_summary(summary_name)
     assert test == True 
 
-def test_summary_model_fail(summary_name): 
+def test_summary_model_fail(summary_name, summary_lst_data): 
     # Fails due to lengh of data being outside acceptable range  
     # i.e. lengh of data > max data length
-    test_lst = ['## The header',
-                'This is the first line [test](test)',
-                'The second line is important',
-                'Third line is here',
-                'Last line in data' ]
-    test_data = {summary_name : test_lst}
+    test_data = {summary_name : summary_lst_data}
 
     mock_func = mock_function(mock_SC_blobs=test_data, length=5) # length = max data length
     back_end = Backend('app', mock_func)
     test = back_end.upload_summary(summary_name)
     assert test == False
 
-def test_summary_uploaded(summary_name):
-    test_lst = ['## The header',
-                'This is the first line [test](test)',
-                'The second line is important',
-                'Third line is here',
-                'Last line in data' ]
-    test_data = {summary_name : test_lst}
+def test_summary_uploaded(summary_name, summary_lst_data):
+    # Tests if summary produced from 'upload_summary'
+    # properly uploads summary to GCS
+    test_data = {summary_name : summary_lst_data}
 
     mock_func = mock_function(mock_SC_blobs=test_data)
     back_end = Backend('app', mock_func)
