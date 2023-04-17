@@ -163,6 +163,17 @@ def test_auth_login_sucesss(client):
     #if password not equal blob password assert error
     pass
 
+#Made using Noyama's latest updates, won't work on current build
+
+# def test_comments_upload(client,mock_backend):
+#     resp = client.post("/comments", data = {"comment": "helloworld", "hidden":"sandy"})
+#     mock_backend.upload.assert_called_once()
+
+# def test_comments_view(client,mock_backend):
+#     resp = client.get("/comments")
+#     assert resp.status_code ==200
+#     assert b"Post your comment here!" in resp.data
+
 
 # def test_upload_failed(client):
 #     resp = client.get("/upload")

@@ -23,6 +23,9 @@
         {% endfor %}
     </div>
     <h2>Post your comment here!</h2>
+    {% if error %}
+    <p>{{error}}</p>
+    {% endif %}
     <form method="POST">
         {% if current_user.is_authenticated %}
         <input type="hidden" name="hidden" value={{current_user.name}}>

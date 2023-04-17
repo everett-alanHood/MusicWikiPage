@@ -211,14 +211,15 @@ def make_endpoints(app, Backend=Backend):
             message = request.form.get("comment")
             author = request.form.get("hidden")
             if not message:
-                print("Error")
                 return render_template('comments.html',
-                                       comment_list=comment_list)
+                                       comment_list=comment_list , error='Comment content is empty. Invalid Comment. Please fill out the form.')
+            if len(message) > 500:
+                return render_template('comments.html',
+                                       comment_list=comment_list , error='Comment is too long, limit your message to 500 characters.')
             uploaded = Back_end.upload_comment(author, message)
             if uploaded:
                 print("File was uploaded Succesfully")
             comment_list = Back_end.get_comments()
-            return render_template('comments.html', comment_list=comment_list)
         return render_template('comments.html', comment_list=comment_list)
 
     def uploadImage(f, filename):

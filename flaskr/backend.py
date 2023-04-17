@@ -108,12 +108,12 @@ class Backend:
             metadata = blob.name.split(":")
             timestamp = str(datetime.fromtimestamp(float(metadata[0])))[0:-10]
             user = metadata[1]
-            user_dict = {
+            comments_dict = {
                 "user": user,
                 "time": timestamp,
                 "content": blob.download_as_string().decode('utf-8')
             }
-            comments_lst.append(user_dict)
+            comments_lst.append(comments_dict)
         return comments_lst
 
     def upload_comment(self, username, content):
