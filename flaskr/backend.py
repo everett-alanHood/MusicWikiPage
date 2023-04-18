@@ -19,7 +19,6 @@ import re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from keras.utils import custom_object_scope
-from flaskr.custom_metric import RougeMetric
 
 
 
@@ -29,7 +28,7 @@ class Backend:
     running the site and connecting to GCS.
 
     Attributes:
-        - bucket_{content,users,images,summary} (GCS Object): buckets of GCS
+        - bucket_{content,users,images,summary} (GCS Object): buckets from minorbugs GCS
         - all_pages    (set): ...
         - max_data_len (int): Max length of input to generate summary
         - re_stop_word (Regex pattern object): Removes all stop words from a given string
@@ -38,13 +37,15 @@ class Backend:
         - tokenize     (Keras tokenizer): Tokenizes data for model generation        
     Methods:
         - get_all_page_names: ...
-        - get_wiki_page: Gets content from an uploaded sub-page
-        - upload: Uploads a file to GCS
+        - get_wiki_page:     Gets content from an uploaded sub-page
+        - upload:            Uploads a file to GCS
         - remove_stop_words: Calls re_stop_word to remove all stop words before generating a summary
-        - re_link: Calls re_link to remove all links before generating a summary
-        - upload_summary: Uploads an md file summary to GCS
-        - url_check: Checks if all links in an md file are valid
-        - get_image: 
+        - re_link:           Calls re_link to remove all links before generating a summary
+        - upload_summary:    Uploads an md file summary to GCS
+        - url_check:         Checks if all links in an md file are valid
+        - get_image:         Retrieve all images from GCS
+        - sign_up:           Signs a user up for a wiki account, asssuming they dont have one
+        - sign_in:           Signs in a user their account
     """
 
     def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
@@ -254,10 +255,12 @@ class Backend:
 
     def get_about(self):
         """
-        Args: Nothing
-        Explain: Retrieves image urls from google cloud 
-                 buckets (Images), only authors.
-        Returns: List of image urls and author names (List)
+        Retrieves image urls from google cloud 
+        buckets (Images), only authors.
+        Args: 
+            - Nothing
+        Returns: 
+            - List of image urls and author names (List)
         """
         storage_client = storage.Client()
         blobs = list(self.bucket_images.list_blobs())
@@ -275,10 +278,12 @@ class Backend:
 
     def sign_up(self, user_info):
         """
-        Args: A users info (Dict(name, username, password))
-        Explain: Adds user to GCB (users), if they dont 
-                 already exist and allows login.
-        Returns: (Boolean), A user's name or empty (str)
+        Adds user to GCB (users), if they dont 
+        already exist and allows login.
+        Args: 
+            - A users info (Dict(name, username, password))
+        Returns: 
+            - (Boolean), A user's name or empty (str)
         """
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
