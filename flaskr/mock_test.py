@@ -129,7 +129,9 @@ def mock_tokenizer_from_json(*args, **kwargs):
 class mock_tokenizer:
     
     def __init__(self, *args, **kwargs):
-        self.text = ['unk', 'world', 'there', 'hello']
+        self.text = ['unk', 'world', 'there', 'hello', '<sos>', '<eos>']
+        self.word_index = {'<sos>':4, '<eos>':5}
+        print(self.word_index)
 
     def texts_to_sequences(self, data, *args, **kwargs):                      
         return [[1,2,3]]

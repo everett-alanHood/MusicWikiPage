@@ -18,20 +18,33 @@ import numpy as np
 import re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
+from keras.utils import custom_object_scope
+from flaskr.custom_metric import RougeMetric
+
 
 
 class Backend:
     """
-    Explain
+    Wiki backend, which handles all operations for properly 
+    running the site and connecting to GCS.
 
-    
     Attributes:
-        bucket_content: 
-        bucket_users: 
-        bucket_images: 
-        pages: Set of all pages on necessary pages on wiki
-        sub_pages: Set of all sub-pages to pages.html
-        all_pages: All valid pages on the wiki (Union of pages and sub_pages)
+        - bucket_{content,users,images,summary} (GCS Object): buckets of GCS
+        - all_pages    (set): ...
+        - max_data_len (int): Max length of input to generate summary
+        - re_stop_word (Regex pattern object): Removes all stop words from a given string
+        - re_link      (Regex pattern object): Removes all links from a given string
+        - model        (Keras model): Keras model which is trained for text summarization
+        - tokenize     (Keras tokenizer): Tokenizes data for model generation        
+    Methods:
+        - get_all_page_names: ...
+        - get_wiki_page: Gets content from an uploaded sub-page
+        - upload: Uploads a file to GCS
+        - remove_stop_words: Calls re_stop_word to remove all stop words before generating a summary
+        - re_link: Calls re_link to remove all links before generating a summary
+        - upload_summary: Uploads an md file summary to GCS
+        - url_check: Checks if all links in an md file are valid
+        - get_image: 
     """
 
     def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
@@ -54,28 +67,28 @@ class Backend:
         self.bucket_summary = storage_client.bucket('minorbugs_summary')
         
         #page urls
-        self.pages = {
+        pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
             'signup', 'images'
         }
-        self.sub_pages = {
+        sub_pages = {
             'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre',
             'form', 'dynamics', 'texture'
         }
-        self.all_pages = self.pages | self.sub_pages
+        self.all_pages = pages | sub_pages
 
         # Pre-Processing for model input
         self.max_data_len = data_len
         stop_words = stopwords.words('english')
         self.re_stop_word = re.compile(f"\\b({'|'.join(stop_words)})\\b")
+        self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
         del stop_words
 
-        self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
-
-        # Store model
+        # Load model
         path = 'gs://minorbugs_model/temp_model/'
         self.model = ml_load(f'{path}saved_model')
         
+        # Load tokenizer
         blob = storage_client.bucket('minorbugs_model').blob('temp_model/tokenizer.json')
         token_json = blob.download_as_string()
         self.tokenize = token_from_json(token_json)
@@ -95,7 +108,7 @@ class Backend:
         page_names = []
         for blob in all_blobs:
             name = blob.name.split('.')
-            if name[0] in self.sub_pages and name[-1] == 'md':
+            if name[-1] == 'md':
                 page_names.append(name[0])
 
         page_names.sort()
@@ -103,10 +116,12 @@ class Backend:
 
     def get_wiki_page(self, page_name):
         """
-        Args: A page name (Str)
-        Explain: Converts a specific markdown file to html, 
-                 adds the header, and stores that in local files.
-        Returns: N/A
+        Converts a specific markdown file to html, 
+        adds the header, and stores that in local files.
+        Args: 
+            - A page name (Str)
+        Returns: 
+            - N/A
         """
         md_blob = self.bucket_content.blob(f'{page_name}.md')
 
@@ -173,7 +188,6 @@ class Backend:
             line = line.decode('utf-8')
             if len(line) < 1 or line[0] == '#': 
                 continue
-            # line = self.remove_links(line)
             no_header_str += line + ' '
         
         # Removes links and unnecessary words from string
@@ -183,9 +197,11 @@ class Backend:
         # Limits the data to avoid excessive computational time
         if len(cleaned_str) > self.max_data_len: 
             return False
+
         # Converts string to data that model can understand
         token_data_encode = np.array([self.tokenize.texts_to_sequences([cleaned_str])])[0]
         data_decode = np.zeros([1, token_data_encode.shape[1]])
+        data_decode[0] = self.tokenize.word_index['<sos>']
         
         # Generates summary and converts back to readable data 
         token_summary = self.model.predict([token_data_encode, data_decode])
@@ -201,8 +217,8 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
+        Checks if an md file has valid links to the site
         Args: Contents of a file (IO), the filename (Str)
-        Explain: Checks if a .md file has valid links to the site
         Returns: (Boolean)
         """
         content = str(file_content.read())
@@ -219,10 +235,12 @@ class Backend:
 
     def get_image(self):
         """
-        Args: Nothing
-        Explain: Retrieves image urls from google cloud 
-                 buckets (Content and Images), excluding authors.
-        Returns: List of image urls (List)
+        Retrieves image urls from google cloud 
+        buckets (Content and Images), excluding authors.
+        Args: 
+            - N/A
+        Returns: 
+            - List of image urls (List)
         """
         #storage_client = storage.Client()
         #bucket = self.bucket_content
