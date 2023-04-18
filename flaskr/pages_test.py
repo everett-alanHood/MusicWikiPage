@@ -6,6 +6,7 @@ from werkzeug.datastructures import FileStorage
 import pytest
 import flask, os
 
+
 @pytest.fixture
 def mock_backend():
     mock_backend = MagicMock()
@@ -23,17 +24,12 @@ def app(mock_backend):
     }, mock_backend)
     return app
 
-########################################
-
-# See https://flask.palletsprojects.com/en/2.2.x/testing/
-# for more info on testing
-
 
 @pytest.fixture
 def client(app):
     return app.test_client()
 
-    
+
 @pytest.fixture
 def login_app(mock_backend):
     app = create_app({
@@ -45,40 +41,16 @@ def login_app(mock_backend):
 @pytest.fixture
 def login_client(login_app):
     return login_app.test_client()
-    
-
-def test_page_sort_alpha(client, mock_backend):
-    mock_backend.get_all_page_names.return_value = ['a_test', 'b_test', 'c_test']
-    resp = client.get('/pages', query_string={'sort_by': 'Alphabetical'})
-    
-    assert resp.status_code == 200
-    str_data = resp.data.decode('utf-8')
-    a_idx, b_idx, c_idx = str_data.find('a_test'), str_data.find('b_test'), str_data.find('c_test')
-    assert -1 < a_idx < b_idx < c_idx
 
 
-def test_page_sort_pop(client, mock_backend):
-    mock_backend.page_sort_by_popularity.return_value = ['3_test', '2_test', '1_test']
-    resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
-
-    assert resp.status_code == 200
-    str_data = resp.data.decode('utf-8')
-    print(str_data)
-    idx_3, idx_2, idx_1 = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
-    assert -1 < idx_3 < idx_2 < idx_1
-
+# TODO(Checkpoint (groups of 4 only) Requirement 4): Change test to
+# match the changes made in the other Checkpoint Requirements.
 def test_home_page(client):
     resp = client.get("/")
     assert resp.status_code == 200  #This check that the connection to homepage is good
     assert b"Music Theory Wiki" in resp.data  #This check if the cilent can grabs the data within the homepage
     assert b"<h1>" in resp.data
 
-
-# TODO(Project 1): Write tests for other routes.
-# def test_sign_up_success():
-    # client = storage_client_mock()
-    # bucket = client.bucket('users')
-    # blob = bucket.blob('hi')
 
 def test_pages(client, mock_backend):
     mock_backend.get_all_page_names.return_value = ["test_page0", "test_page1"]
@@ -94,9 +66,10 @@ def test_pages_next(mock_render, client, mock_backend):
     mock_backend.get_wiki_page.return_value = "Test Content"
     mock_render.return_value = "Test Content"
 
-    resp = client.get("/pages/test")
+    resp = client.get("/pages/sub_pages")
 
-    mock_render.assert_called_once_with("test.html", content="Test Content")
+    mock_render.assert_called_once_with("sub_pages.html", content="Test Content")
+    print(resp.data)
     assert resp.status_code == 200
     assert b"Test Content" == resp.data
 
@@ -250,3 +223,24 @@ def test_invalid_method(client, mock_backend):
     resp = client.get("/images", follow_redirects=True)
     assert resp.status_code == 405
     assert b"<a href=\"/\">/</a>" in resp.data
+
+
+def test_page_sort_alpha(client, mock_backend):
+    mock_backend.get_all_page_names.return_value = ['a_test', 'b_test', 'c_test']
+    resp = client.get('/pages', query_string={'sort_by': 'Alphabetical'})
+    
+    assert resp.status_code == 200
+    str_data = resp.data.decode('utf-8')
+    a_idx, b_idx, c_idx = str_data.find('a_test'), str_data.find('b_test'), str_data.find('c_test')
+    assert -1 < a_idx < b_idx < c_idx
+
+
+def test_page_sort_pop(client, mock_backend):
+    mock_backend.page_sort_by_popularity.return_value = ['3_test', '2_test', '1_test']
+    resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
+
+    assert resp.status_code == 200
+    str_data = resp.data.decode('utf-8')
+    print(str_data)
+    idx_3, idx_2, idx_1 = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
+    assert -1 < idx_3 < idx_2 < idx_1
