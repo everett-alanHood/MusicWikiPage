@@ -67,15 +67,13 @@ class Backend:
         # Pre-Processing for model input
         self.max_data_len = data_len
         stop_words = stopwords.words('english')
-        self.re_sw = re.compile(f"\\b({'|'.join(stop_words)})\\b")
-        self.remove_sw = lambda text : self.re_sw.sub('', text)
+        self.re_stop_word = re.compile(f"\\b({'|'.join(stop_words)})\\b")
         del stop_words
 
         self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
-        self.remove = lambda text : self.re_link.sub('', text)
 
         # Store model
-        path = f'gs://minorbugs_model/temp_model/'
+        path = 'gs://minorbugs_model/temp_model/'
         self.model = ml_load(f'{path}saved_model')
         
         blob = storage_client.bucket('minorbugs_model').blob('temp_model/tokenizer.json')
@@ -143,14 +141,20 @@ class Backend:
             return False
 
         blob.upload_from_file(content)
-        if file_end == "md" and not self.upload_summary(filename):
-            return False
+        if file_end == "md":
+            self.upload_summary(filename)
         
         return True
-    
+        
+    def remove_stop_words(self, text):
+        return self.re_stop_word.sub('', text)
+
+    def remove_links(self, text):
+        return self.re_link.sub('', text)
+
     def upload_summary(self, filename):
         """
-        Pre-Processes and cleans file text, gets
+        Pre-Processes and cleans file text, generates
         summary from model and uploads the summary
         to the minorbugs_summary bucket
 
@@ -158,31 +162,38 @@ class Backend:
             - file_name (Str), name of .md file
 
         returns:
-            - True or False
+            - (Boolean)
         """
-        no_head_url = ''
         md_blob = self.bucket_content.blob(filename)
         md_lines = md_blob.open('rb') #blob.read().decode("utf-8")
-
+        no_header_str = ''
+        
+        # Removes header and converts bytes to strings
         for line in md_lines:
             line = line.decode('utf-8')
-            if line[0] == '#': 
+            if len(line) < 1 or line[0] == '#': 
                 continue
-            line = self.remove(line)
-            no_head_url += line
+            # line = self.remove_links(line)
+            no_header_str += line + ' '
+        
+        # Removes links and unnecessary words from string
+        no_stop_words = self.remove_stop_words(no_header_str.lower())
+        cleaned_str = self.remove_links(no_stop_words)
 
-        cleaned_str = self.remove_sw(no_head_url.lower())
+        # Limits the data to avoid excessive computational time
         if len(cleaned_str) > self.max_data_len: 
             return False
-
+        # Converts string to data that model can understand
         token_data_encode = np.array([self.tokenize.texts_to_sequences([cleaned_str])])[0]
         data_decode = np.zeros([1, token_data_encode.shape[1]])
         
+        # Generates summary and converts back to readable data 
         token_summary = self.model.predict([token_data_encode, data_decode])
-        max_preds = np.argmax(token_summary, axis=-1)+1
+        max_preds = np.argmax(token_summary, axis=-1)
         list_summary = self.tokenize.sequences_to_texts(max_preds)
-        str_summary = ''.join(list_summary)
-
+        str_summary = ' '.join(list_summary)    
+  
+        # Uploads summary to cloud
         blob = self.bucket_summary.blob(filename)
         blob.upload_from_string(str_summary)
         
