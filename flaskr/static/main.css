@@ -1,0 +1,14 @@
+@import "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css";
+body {
+    text-align: center;
+    margin: 25px;
+    background-color: pink;
+    font-family: courier;
+    font-size: 14px;
+}
+
+h1 {
+    margin-top: 5px;
+    font-family: verdana;
+    font-size: 35px;
+}

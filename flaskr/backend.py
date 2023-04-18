@@ -10,6 +10,7 @@ import os
 # from markdown import markdown
 import markdown
 import re
+import csv
 from collections import deque
 """
 Args:
@@ -48,6 +49,7 @@ class Backend:
         self.bucket_content = storage_client.bucket('minorbugs_content')
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
+        self.bucket_page_stats = storage_client.bucket("minorbugs_page_analytics")
         self.bucket_users.bucket_history = storage_client.bucket('user_history')        
         #page urls
         self.pages = {
@@ -129,6 +131,14 @@ class Backend:
         page_names.sort()
         return page_names
 
+    def page_sort_by_popularity(self):
+        csv_file=self.modify_page_analytics()
+        list=[]
+        with open(csv_file,"r") as csv_most_viewed:
+            for row in csv_most_viewed:
+                list.append(row)
+        print(list)
+        return list
     def get_wiki_page(self, page_name):
         """
         Args: A page name (Str)
@@ -141,6 +151,14 @@ class Backend:
         html_content = markdown.markdown(md_content)
         
         return html_content
+    
+    def modify_page_analytics(self):
+        """This check if a subpage analytics doesnt exist inside in the csv 
+        and defult the ammount of times that the page was viewed to 0"""
+        all_pages=self.get_all_page_names()
+        csv_files=list(self.bucket_page_stats.list_blobs())
+        print(str(csv_files))
+        
 
     def upload(self, content, filename):
         """
@@ -156,6 +174,7 @@ class Backend:
                 return False
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
+
         elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
             #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
@@ -163,6 +182,7 @@ class Backend:
             return False
 
         blob.upload_from_file(content)
+        
         return True
 
     def url_check(self, file_content, filename):
@@ -300,3 +320,6 @@ class Backend:
         self.current_username = user_name
 
         return True, name
+
+    def get_log(self):
+        pass
