@@ -86,11 +86,11 @@ class Backend:
         del stop_words
 
         # Load model
-        path = 'gs://minorbugs_model/temp_model/'
+        path = 'gs://minorbugs_model/model_0'
         self.model = ml_load(f'{path}saved_model')
         
         # Load tokenizer
-        blob = storage_client.bucket('minorbugs_model').blob('temp_model/tokenizer.json')
+        blob = storage_client.bucket('minorbugs_model').blob('model_0/tokenizer.json')
         token_json = blob.download_as_string()
         self.tokenize = token_from_json(token_json)
 
