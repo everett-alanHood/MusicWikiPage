@@ -79,11 +79,14 @@ def make_endpoints(app, Backend=Backend):
 
     @app.route('/pages', methods=['GET','POST'])
     def pages():
-        """Calls the Backend to look up all existing pages in the GCS bucket corresponding to the Markdown files,
-        it then gets all the names and sends the user to a page where all available pages are shown as hyperlinks.
-
-        GET: Gets page names from the Backend and sends the user to a page showing all of them as a list of hyperlinks.
-        """
+        
+        """Description: Have two hyperlink that give the sorting method that the hyperlink for 
+                  subpages will display \n
+        Args:
+            - None
+        Return:
+            - returns flask function consisting of pages.html, string and list of 
+              page names"""
         page_names = Back_end.get_all_page_names()
         sort="Alphabetical"
         print(request.args.get("sort_by"))
@@ -92,7 +95,7 @@ def make_endpoints(app, Backend=Backend):
             page_names=Back_end.page_sort_by_popularity()
             #get list of page names by Popularity
         # default list is equal to Alphabetically
-        return render_template('pages.html',sort=sort,page_names=page_names)
+        return render_template('pages.html', sort=sort, page_names=page_names)
         
 
     @app.route('/pages/<sub_page>')
