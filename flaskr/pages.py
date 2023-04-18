@@ -198,16 +198,14 @@ def make_endpoints(app, backend):
 
     # TODO Get rid of this, and just replace with Back_end.upload
     def uploadImage(f, filename):
-        """Calls upon the Backend object upload method, passing a IO object
-        and a String representing the file and its filename respectively.
-
+        """
+        Calls upon the Backend object upload method, passing a IO object
+        and a String representing the file and its filename respectively.\n
         Args:
             f: IO object that is the content to be uploaded.
             filename: String representation of the passed file name
-
         Returns:
             Boolean representing if the upload was successful or not.
-
         """
         return Back_end.upload(f, filename)
 

@@ -50,10 +50,11 @@ class Backend:
 
     def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
         """
+        Initializes and creates necessary attributes for backend.\n
         Args: 
-            An App from flask (ex. Flask(__name__) )
-        Explain: 
-            Initializes and creates necessary attributes for backend
+            - App from flask (ex. Flask(__name__) )      
+            - length 4 vector (Optional)
+                - (GCS client, keras load_model instance, keras tokenizer from json instance, max data length)      
         """
         SC, ml_load, token_from_json, data_len = calls
 
@@ -96,15 +97,13 @@ class Backend:
 
     def get_all_page_names(self):
         """
+        Gets all markdown sub-pages from google cloud buckets.\n
         Args: 
-            Nothing
-        Explain:
-            Gets all markdown sub-pages from google cloud buckets
+            - N/A
         Returns:
-            List of sub-page names (List)
+            - List of sub-page names (List)
         """
         all_blobs = list(self.bucket_content.list_blobs())
-        #Could add a feature where users upload their own content??
 
         page_names = []
         for blob in all_blobs:
@@ -118,7 +117,7 @@ class Backend:
     def get_wiki_page(self, page_name):
         """
         Converts a specific markdown file to html, 
-        adds the header, and stores that in local files.
+        adds the header, and stores that in local files.\n
         Args: 
             - A page name (Str)
         Returns: 
@@ -132,10 +131,12 @@ class Backend:
 
     def upload(self, content, filename):
         """
-        Args: Contents of a file (IO), the filename (Str)
-        Explain: Uploads a .md, .jpg, .jpeg or .png,
-                 to a google cloud bucket (Content or Images)
-        Returns: (Boolean)
+        Uploads a .md, .jpg, .jpeg or .png,
+        to a google cloud bucket (Content or Images)\n
+        Args: 
+            - Contents of a file (IO), the filename (Str)
+        Returns: 
+            - (Boolean)
         """
         file_end = filename.split(".")[-1].lower()
 
@@ -158,21 +159,33 @@ class Backend:
         return True
         
     def remove_stop_words(self, text):
+        """
+        Removes stop words from text.\n
+        Args:
+            - Original text (str)
+        Returns:
+            - Cleaned text (str)
+        """        
         return self.re_stop_word.sub('', text)
 
     def remove_links(self, text):
+        """
+        Removes links from text.\n
+        Args:
+            - Original text (str)
+        Returns:
+            - Cleaned text (str)
+        """        
         return self.re_link.sub('', text)
 
     def upload_summary(self, filename):
         """
         Pre-Processes and cleans file text, generates
         summary from model and uploads the summary
-        to the minorbugs_summary bucket
-
-        args:
-            - file_name (Str), name of .md file
-
-        returns:
+        to the minorbugs_summary bucket.\n
+        Args:
+            - filename (Str), name of .md file
+        Returns:
             - (Boolean)
         """
         md_blob = self.bucket_content.blob(filename)
@@ -213,9 +226,11 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
-        Checks if an md file has valid links to the site
-        Args: Contents of a file (IO), the filename (Str)
-        Returns: (Boolean)
+        Checks if an md file has valid links to the site\n
+        Args: 
+            - Contents of a file (IO), the filename (Str)
+        Returns: 
+            - (Boolean)
         """
         content = str(file_content.read())
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
@@ -232,7 +247,7 @@ class Backend:
     def get_image(self):
         """
         Retrieves image urls from google cloud 
-        buckets (Content and Images), excluding authors.
+        buckets (Content and Images), excluding authors.\n
         Args: 
             - N/A
         Returns: 
@@ -256,7 +271,7 @@ class Backend:
     def get_about(self):
         """
         Retrieves image urls from google cloud 
-        buckets (Images), only authors.
+        buckets (Images), only authors.\n
         Args: 
             - Nothing
         Returns: 
@@ -279,9 +294,9 @@ class Backend:
     def sign_up(self, user_info):
         """
         Adds user to GCB (users), if they dont 
-        already exist and allows login.
+        already exist and allows login.\n
         Args: 
-            - A users info (Dict(name, username, password))
+            - A users info, Dict(name, username, password)
         Returns: 
             - (Boolean), A user's name or empty (str)
         """
@@ -304,10 +319,12 @@ class Backend:
 
     def sign_in(self, user_check):
         """
-        Args: Users sign-in info ( Dict(username, password) )
-        Explain: Checks if an existing user entered the correct 
-                 credentials and allows for login.
-        Returns: (Boolean), A user's name or empty (str)
+        Checks if an existing user entered the correct 
+        credentials and allows for login.\n
+        Args: 
+            - Users sign-in info ( Dict(username, password) )
+        Returns: 
+            - (Boolean), A user's name or empty (str)
         """
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
