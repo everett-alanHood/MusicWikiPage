@@ -176,7 +176,20 @@ class Backend:
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown.markdown(md_content)
+
+        bucket=self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")        
+        data=self.make_popularity_list()
+        string=""
+        for index , pairs in enumerate (data):
+            if pairs[0]==page_name:
+                pairs[1]+=1
+        print(str(data))          
+        string=""
+        for index in data:
+            string=string+index[0]+","+str(index[1])+"\r\n"
         
+        blob.upload_from_string(string)
         return html_content
     
     def modify_page_analytics(self):

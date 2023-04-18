@@ -104,37 +104,6 @@ def make_endpoints(app, Backend=Backend):
         """
         
         html_content = Back_end.get_wiki_page(sub_page)
-        bucket=Back_end.bucket_page_stats
-        blob = bucket.get_blob("Dictionary by Popularity.csv")        
-        data=Back_end.make_popularity_list()
-        print(data)
-        string=""
-        """
-        for line in downloaded_file.split("\n"):
-            line=line.strip()
-            print("The line:"+str(line))
-            list1=line.split(",")
-            print("The list:"+str(list1))
-            print(type(list1[-1]))
-            list1[-1]=int(list1[-1])
-            data.append(list)
-        """ 
-        temp=[]
-        
-        print("This is the data of :"+str(data))
-        for index , pairs in enumerate (data):
-            if pairs[0]==sub_page:
-                pairs[1]+=1
-        print(str(data))          
-        string=""
-        for index in data:
-            string=string+index[0]+","+str(index[1])+"\r\n"
-        
-        print(string)
-        blob.upload_from_string(string)
-        print("This is the data of :"+str(data))
-                      
-        
         
         return render_template(f'sub_pages.html', content=html_content)
 
