@@ -10,10 +10,8 @@ import markdown
 
 # Data processing
 """ Pip install nltk, numpy, tensorflow """
+from flaskr.stopwords import get_stopwords
 import re
-import nltk
-from nltk.corpus import stopwords
-nltk.download('stopwords')
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
@@ -87,10 +85,10 @@ class Backend:
 
         # Pre-Processing for model input
         self.max_data_len = data_len
-        stop_words = stopwords.words('english')
+        stop_words = get_stopwords()
+        del stop_words
         self.re_stop_word = re.compile(f"\\b({'|'.join(stop_words)})\\b")
         self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
-        del stop_words
 
         # Load model
         path = 'gs://minorbugs_model/model_0'
