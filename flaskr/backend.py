@@ -211,7 +211,7 @@ class Backend:
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown.markdown(md_content)
-        
+
         return html_content
     
     def modify_page_analytics(self):
