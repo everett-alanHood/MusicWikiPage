@@ -19,7 +19,7 @@ import re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from keras.utils import custom_object_scope
-from flaskr.custom_metric import RougeMetric
+
 
 
 
@@ -127,11 +127,14 @@ class Backend:
 
         md_content = md_blob.download_as_string().decode('utf-8')
         main = markdown.markdown(md_content)
-        
+    
         md_blob = self.bucket_summary.blob(f'{page_name}.md')
         print(self.tokenize.word_index["hello"])
-        md_content = md_blob.download_as_string().decode('utf-8')
-        summary = markdown.markdown(md_content)
+        if md_blob.exists():   
+            md_content = md_blob.download_as_string().decode('utf-8')
+            summary = markdown.markdown(md_content)
+        else:
+            summary=None
         return main,summary
 
     def upload(self, content, filename):

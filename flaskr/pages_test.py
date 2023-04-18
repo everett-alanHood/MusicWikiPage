@@ -47,8 +47,8 @@ def test_home_page(client):
     assert b"<h1>" in resp.data
 
 def test_sign_up_success():
-    # bucket = client.bucket('users')
-    # blob = bucket.blob('hi')
+    bucket = client.bucket('users')
+    blob = bucket.blob('hi')
 
     user_check = {"name": "test", "username": "hell", "password": "testhello"}
 
@@ -110,7 +110,7 @@ def test_get_about(client):
     assert resp.status_code == 200  #This check that the connection to about is good
     assert b"Your Authors" in resp.data  #This check if the cilent can grabs the data within about
 def test_get_page_summary(client):
-    resp = client.get("/subpages/chord")
+    resp = client.get("/pages/chord")
     assert resp.status_code == 200  #This check that the connection to about is good
     assert b"unk" in resp.data  #This check if the cilent can grabs the data within about
 
