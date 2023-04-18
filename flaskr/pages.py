@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-from flaskr.backend import Backend
 from google.cloud import storage
 import os
 import uuid
@@ -8,7 +7,7 @@ import zipfile
 from flaskext.markdown import Markdown
 
 
-def make_endpoints(app, Backend=Backend):
+def make_endpoints(app, Backend):
     """Connects the frontend with the established routes and the backend.
 
     Attributes:
@@ -94,6 +93,7 @@ def make_endpoints(app, Backend=Backend):
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
         html_content = Back_end.get_wiki_page(sub_page)
+        # TODO: replace with single template instead of the dynamic {sub_page}.html
         return render_template(f'{sub_page}.html', content=html_content)
 
     @app.route('/about')
@@ -145,7 +145,6 @@ def make_endpoints(app, Backend=Backend):
 
         user = load_user(data)
         login_user(user)
-
         return redirect(url_for('welcome'))
 
     @app.route('/logout')
@@ -174,7 +173,6 @@ def make_endpoints(app, Backend=Backend):
             print("FILENAME", filename)
             file_end = filename.split(".")[-1].lower()
             #case where the file is an image
-
             #if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
             if file_end == "jpeg" or file_end == "jpg" or file_end == "png" or file_end == "md":
                 uploadImage(uploaded_file, filename)
@@ -192,8 +190,8 @@ def make_endpoints(app, Backend=Backend):
                             print("FILENAME\nrfeionffoij", zipped_image)
                 return redirect(url_for("home"))
             else:
-                render_template('upload.html', error='Incorrect File Type')
-
+                return render_template('upload.html',
+                                       error='Incorrect File Type')
         return render_template('upload.html')
 
     @app.route('/comments', methods=['GET', 'POST'])
@@ -222,6 +220,7 @@ def make_endpoints(app, Backend=Backend):
             comment_list = Back_end.get_comments()
         return render_template('comments.html', comment_list=comment_list)
 
+    # TODO Get rid of this, and just replace with Back_end.upload
     def uploadImage(f, filename):
         """Calls upon the Backend object upload method, passing a IO object
         and a String representing the file and its filename respectively.
@@ -264,7 +263,6 @@ def make_endpoints(app, Backend=Backend):
 
         user = load_user(data)
         login_user(user)
-
         return redirect(url_for('welcome'))
 
     @app.route('/images', methods=['GET', 'POST'])
@@ -285,7 +283,7 @@ def make_endpoints(app, Backend=Backend):
             error: Error number representing the type of error the user got.
         """
         flash('Incorrect method used, try again')
-        return redirect(url_for('/')), 405
+        return redirect(url_for('home')), 405
 
     """
     {% with messages = get_flashed_messages() %}
