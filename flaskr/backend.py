@@ -12,12 +12,13 @@ import re
 # for csv methods
 import csv
 from collections import deque
+
+import time
 from datetime import datetime
 """
+Explanation
 Args:
-Explain:
 Returns:
-Raises:
 """
 
 
@@ -51,6 +52,7 @@ class Backend:
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
         self.bucket_users.bucket_history = storage_client.bucket('user_history')        
+        self.bucket_messages = storage_client.bucket('minorbugs_comments')
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -238,6 +240,47 @@ class Backend:
             
         blob.upload_from_string(string)
         return string
+
+    def get_comments(self):
+        """
+        Args: self
+        Explain: Gets all the comments stored in the Google Cloud buckets and returns
+        them as a list of dictionaries containing all the comment info.
+        Returns: List of dictionaries representing the comments.
+        """
+        blobs = list(self.bucket_messages.list_blobs())
+        comments_lst = []
+        for blob in blobs:
+            metadata = blob.name.split(":")
+            timestamp = str(datetime.fromtimestamp(float(metadata[0])))[0:-10]
+            user = metadata[1]
+            comments_dict = {
+                "user": user,
+                "time": timestamp,
+                "content": blob.download_as_string().decode('utf-8')
+            }
+            comments_lst.append(comments_dict)
+        return comments_lst
+
+    def upload_comment(self, username, content):
+        """
+        Args:
+        username: String representation of the logged in username.
+        content: String representation of the comment typed out by the user in the comment text input.
+        Explain: Receives a username and the comment content and formats the blob name as timestamp:username and then the contents of that blob
+        is the message. It is then uploaded to the Google Cloud Buckets and then served with all the other comments.
+        Returns: 
+        Boolean representing if the upload was successful or not.
+        """
+        if not content:
+            return False
+        timestamp = str(time.time())
+        filename = timestamp + ":" + username
+        message_blob = self.bucket_messages.blob(filename)
+        if message_blob.exists():
+            return False
+        message_blob.upload_from_string(content)
+        return True
 
     def upload(self, content, filename):
         """

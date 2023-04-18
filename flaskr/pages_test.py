@@ -13,6 +13,8 @@ def mock_backend():
     mock_backend.return_value = mock_backend
     return mock_backend
 
+# See https://flask.palletsprojects.com/en/2.2.x/testing/
+# for more info on testing
 @pytest.fixture
 def app(mock_backend):
     app = create_app({
@@ -115,11 +117,19 @@ def test_welcome(client):
     assert resp.status_code == 200
     assert b"Welcome" in resp.data
 
-
 def test_get_login(client):
     resp = client.get("/login")
     assert resp.status_code == 200
     assert b"<h1>Login</h1>" in resp.data
+
+def test_comments_upload(client,mock_backend):
+    resp = client.post("/comments", data = {"comment": "helloworld", "hidden":"sandy"})
+    mock_backend.upload_comment.assert_called_once()
+
+def test_comments_view(client,mock_backend):
+    resp = client.get("/comments")
+    assert resp.status_code ==200
+    assert b"Post your comment here!" in resp.data
 
 
 @patch("uuid.uuid4")
@@ -133,8 +143,11 @@ def test_auth_login_success(mock_uuid, client, mock_backend):
                        },
                        follow_redirects=True)
     assert resp.status_code == 200
-    assert b"Welcome 1234" in resp.data
+    assert b"Welcome Test Name" in resp.data
 
+# def test_upload_success(client):
+#     resp = client.get("/upload")
+#     assert resp.status_code == 200  #This check that the connection to upload is good
 
 def test_auth_login_fail(client, mock_backend):
     mock_backend.sign_in.return_value = (False, "Test Name")
@@ -178,6 +191,11 @@ def test_get_signup(client):
     assert resp.status_code == 200
     assert b"<h1>Sign Up</h1>" in resp.data
 
+# if file format is not (.jpg) (.jpeg) (.png) or (.md) assert error
+def test_get_about(client):
+    resp = client.get("/about")
+    assert resp.status_code == 200  #This check that the connection to about is good
+    assert b"Your Authors" in resp.data  #This check if the cilent can grabs the data within about
 
 @patch("uuid.uuid4")
 def test_signup_success(mock_uuid, login_client, mock_backend):
@@ -191,9 +209,21 @@ def test_signup_success(mock_uuid, login_client, mock_backend):
                              },
                              follow_redirects=True)
     assert resp.status_code == 200
-    assert b"Welcome 1234" in resp.data
+    assert b"Welcome Test Name" in resp.data
 
+# def test_pages_next(client):
+#     resp = client.get("/pages/chord")
+#     assert resp.status_code == 200  #This check that the connection to a sub pages is good
+#     assert b"Chord" in resp.data
 
+# def test_get_welcome(client):
+#     resp = client.get("/welcome")
+#     user_check = {"username": "username", "password": "password"}
+#     #sign in user to use welcome
+#     assert resp.status_code == 401  #This check that the connection to welcome is good
+#     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
+
+# user vincent username is username and password is password
 def test_signup_fail(client, mock_backend):
     mock_backend.sign_up.return_value = (False, "Test Name")
     resp = client.post("/auth_signup",

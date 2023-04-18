@@ -191,6 +191,26 @@ def file_success():
 
 
 @pytest.fixture
+def comment_success():
+    file = MagicMock()
+    file.return_value = "Text from the start"
+    file.endswith.return_value = True
+    file.name.return_value = "1680980576.6452136:sandy"
+    file.read.return_value = "Hello World"
+    return file
+
+
+@pytest.fixture
+def comment_failed():
+    file = MagicMock()
+    file.return_value = "Text from the start"
+    file.endswith.return_value = True
+    file.name.return_value = "1680980576.6452136:sandy"
+    file.read.return_value = ""
+    return file
+
+
+@pytest.fixture
 def valid_user():
     user_info = {}
     user_info['name'] = "Everett-Alan"
@@ -252,6 +272,35 @@ def test_upload_sucess(file_success):
     assert val == True
 
 
+def test_comments_upload_sucess(comment_success):
+    be = Backend('app', SC=storage_client_mock())
+    success = be.upload_comment("sandy", comment_success.read())
+    assert success == True
+
+
+def test_comments_upload_fail(comment_failed):
+    be = Backend('app', SC=storage_client_mock())
+    success = be.upload_comment("sandy", comment_failed.read())
+    assert success == False
+
+def test_get_all_comments():
+    be = Backend('app', SC=storage_client_mock())
+    with patch.object(be.bucket_messages, 'list_blobs') as mock_list_blobs:
+        mock_blob = blob_object("1680933371.7467146:sandy")
+        mock_blob.upload_from_string("Hola Mundo")
+        mock_blob2 = blob_object("1680936363.3217728:sandy")
+        mock_blob2.upload_from_string("Hello")
+        mock_list_blobs.return_value = [mock_blob, mock_blob2]
+        comments_dict = be.get_comments()
+        print(comments_dict)
+
+    test_dict = {
+        "user": "sandy",
+        "time": "2023-04-08 05:56",
+        "content": "Hola Mundo"
+    }
+    assert test_dict in comments_dict
+
 def test_get_all_pages_names():
     be = Backend(app)
     test_string = 'chord'
@@ -305,9 +354,6 @@ def test_make_popularity_list():
 
 #test username:test password:test
 
-
-
-# ----------------------START-----------------------------
 ### If using blob_test, follow format ###
         # blob_test = {<name_of_blob>.<extension> : test data,
         #              <name_of_blob>.<extension> : test data}
@@ -359,5 +405,4 @@ def test_pop_increment():
     print(incr_actual)
     assert 'hello,2\r\nthere,3\r\nworld,2\r\n' == incr_actual
 
-# ----------------------END-----------------------------
 
