@@ -58,13 +58,12 @@ def test_page_sort_alpha(client, mock_backend):
 def test_page_sort_pop(client, mock_backend):
     mock_backend.page_sort_by_popularity.return_value = ['3_test', '2_test', '1_test']
     resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
-    
+
     assert resp.status_code == 200
     str_data = resp.data.decode('utf-8')
     print(str_data)
     idx_3, idx_2, idx_1 = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
     assert -1 < idx_3 < idx_2 < idx_1
-
 
 def test_home_page(client):
     resp = client.get("/")

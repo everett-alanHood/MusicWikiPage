@@ -155,11 +155,10 @@ class Backend:
         
     def page_sort_by_popularity(self):
         """
+        Gets the list of the pages and how often they've been looked at unorganized
+        organizes them by popularity greatest to least \n
         Args: 
-            nothing
-        Explain:
-            gets the list of the pages and how often they've been looked at unorganized
-            organizes them by popularity greatest to least
+            N/A
         Returns:
             list of pages(str) without number ranking (list)
         """
@@ -185,7 +184,7 @@ class Backend:
     def get_wiki_page(self, page_name):
         """
         Increments popularity value of sub page
-        and converts a markdown file to HTML.       
+        and converts a markdown file to HTML.\n       
         Args: 
             - Sub page name (Str)
         Returns:
@@ -206,7 +205,6 @@ class Backend:
             string = string + index[0] + "," + str(index[1]) + "\r\n"
         
         blob.upload_from_string(string)
-        ################################
 
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
@@ -216,7 +214,7 @@ class Backend:
     
     def modify_page_analytics(self):
         """This check if a subpage analytics doesnt exist inside in the csv 
-        and defult the ammount of times that the page was viewed to 0
+        and defult the ammount of times that the page was viewed to 0\n
         Args:
             - None
         Returns:
@@ -243,13 +241,15 @@ class Backend:
 
     def upload(self, content, filename):
         """
-        Args: Contents of a file (IO), the filename (Str)
-        Explain: Uploads a .md, .jpg, .jpeg or .png,
-                 to a google cloud bucket (Content or Images)
-        Returns: (Boolean)
+        Uploads a .md, .jpg, .jpeg or .png,
+        to a google cloud bucket (Content or Images)\n
+        Args: 
+            - Contents of a file (IO), the filename (Str)
+        Returns: 
+            - (Boolean)
         """
         file_end = filename.split(".")[-1].lower()
-        #if filename.endswith('.md'):
+
         if file_end == "md":
             if not self.url_check(content, filename):
                 return False
@@ -257,8 +257,8 @@ class Backend:
             blob = self.bucket_content.blob(os.path.basename(filename))
 
         elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
-            #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
+
         else:
             return False
 
@@ -267,9 +267,11 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
-        Args: Contents of a file (IO), the filename (Str)
-        Explain: Checks if a .md file has valid links to the site
-        Returns: (Boolean)
+        Checks if a .md file has valid links to the site\n
+        Args: 
+            - Contents of a file (IO), the filename (Str)
+        Returns: 
+            - (Boolean)
         """
         content = str(file_content.read())
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
