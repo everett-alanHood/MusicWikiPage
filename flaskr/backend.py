@@ -15,10 +15,8 @@ import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 import numpy as np
-import re
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
-from keras.utils import custom_object_scope
 import time
 from datetime import datetime
 
