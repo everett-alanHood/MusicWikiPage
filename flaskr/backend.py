@@ -64,6 +64,14 @@ class Backend:
         self.current_username = ""
 
     def get_history(self):
+        """
+        Args: 
+            Nothing
+        Explain:
+            gets the user's history from bucket_users
+        Returns:
+            list of the user's pages and times
+        """
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
         content = content.replace('\'', '')
@@ -73,6 +81,14 @@ class Backend:
         return content
     
     def add_to_history(self, page_name):
+        """
+        Args: 
+            name of a page (str)
+        Explain:
+            add the page name and time to the user's bucket
+        Returns:
+            nothing
+        """
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         
