@@ -102,34 +102,9 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        """
-        for line in downloaded_file.split("\n"):
-            line=line.strip()
-            print("The line:"+str(line))
-            list1=line.split(",")
-            print("The list:"+str(list1))
-            print(type(list1[-1]))
-            list1[-1]=int(list1[-1])
-            data.append(list)
-        """ 
-
-        # bucket = Back_end.bucket_page_stats
-        # blob = bucket.get_blob("Dictionary by Popularity.csv")        
-        # data = Back_end.make_popularity_list()
-        # string = ""
         
-        # for index, pairs in enumerate(data):
-        #     if pairs[0] == sub_page:
-        #         pairs[1] += 1
-
-        # string = ""
-        # for index in data:
-        #     string = string + index[0] + "," + str(index[1]) + "\r\n"
-        
-        # blob.upload_from_string(string)
-        
-        html_content = Back_end.get_wiki_page(sub_page)         
-        return render_template(f'{sub_page}.html', content=html_content)
+        md_content = Back_end.get_wiki_page(sub_page)
+        return render_template(f'sub_pages.html', content=md_content)
 
     #@app.route('/pages', methods=['GET'])
     #def dropdown():
@@ -195,8 +170,9 @@ def make_endpoints(app, Backend=Backend):
 
         GET: Log out and redirects user to initial page
         """
-        if Back_end.current_user.is_authenticated:
-            Back_end.add_to_history("Logged Out")
+        if Back_end.current_username !="":
+            if Back_end.current_user.is_authenticated:
+                Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 

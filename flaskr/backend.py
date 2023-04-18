@@ -105,9 +105,10 @@ class Backend:
         #Could add a feature where users upload their own content??
         
         page_names = []
+        blocklist=["test_model","TestMeet","test_url"]
         for blob in all_blobs:
             name = blob.name.split('.')
-            if name[-1] == 'md':
+            if name[0] not in blocklist and name[-1] == 'md':
                 page_names.append(name[0])
                 
         page_names.sort()
@@ -140,6 +141,7 @@ class Backend:
 
         temp=[]
         true_data=[]
+        
         for index , pairs in enumerate (data):
             temp.append(pairs)            
             
@@ -163,8 +165,8 @@ class Backend:
         """
         self.modify_page_analytics()
         p_list=self.make_popularity_list()
-        print("\n\n\nThe List")
-        print(p_list)
+
+
         
         for next_pop in range(0, len(p_list)-1, 1):
             highest = p_list[next_pop][1]
@@ -179,7 +181,7 @@ class Backend:
             p_list[page] = p_list[page][0]
         
         return p_list
-
+        
     def get_wiki_page(self, page_name):
         """
         Increments popularity value of sub page
