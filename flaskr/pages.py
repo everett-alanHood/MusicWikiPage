@@ -145,8 +145,6 @@ def make_endpoints(app, backend):
 
         user = load_user(data)
         login_user(user)
-        # TODO: current_user.name will always use the ID.
-        # Need to get the name in python and inject into the template.
         return redirect(url_for('welcome'))
 
     @app.route('/logout')
@@ -195,6 +193,32 @@ def make_endpoints(app, backend):
                 return render_template('upload.html',
                                        error='Incorrect File Type')
         return render_template('upload.html')
+
+    @app.route('/comments', methods=['GET', 'POST'])
+    @login_required
+    def comments_page():
+        """Displays all fetched Google Cloud Bucket blobs from the comments bucket as comments with the username, time of posting and content being displayed. 
+        When a POST request is received it takes the information passed in the
+        form and creates a blob containing it that is uploaded to the Google Cloud Storage comments bucket. 
+
+        GET: Comments page with input form for users to upload their own content.
+        POST: Takes the message passed as an input in the form and sents it to the Backend, refreshes the page to display newly created comments.
+        """
+        comment_list = Back_end.get_comments()
+        if request.method == 'POST':
+            message = request.form.get("comment")
+            author = request.form.get("hidden")
+            if not message:
+                return render_template('comments.html',
+                                       comment_list=comment_list , error='Comment content is empty. Invalid Comment. Please fill out the form.')
+            if len(message) > 500:
+                return render_template('comments.html',
+                                       comment_list=comment_list , error='Comment is too long, limit your message to 500 characters.')
+            uploaded = Back_end.upload_comment(author, message)
+            if uploaded:
+                print("File was uploaded Succesfully")
+            comment_list = Back_end.get_comments()
+        return render_template('comments.html', comment_list=comment_list)
 
     # TODO Get rid of this, and just replace with Back_end.upload
     def uploadImage(f, filename):

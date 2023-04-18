@@ -6,6 +6,59 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 from flaskr.mock_test import storage_client_mock, mock_model_load, mock_tokenizer_from_json
 
+class blob_object:
+
+    def __init__(self, blob_name, test_data=None):
+        self.test_data = test_data
+        self.name = blob_name
+        self.public_url = False
+        self.uploaded = None
+
+    def exists(self):
+        if not self.public_url:
+            return False
+        else:
+            return True
+
+    def _set_public_url(self, url_name):
+        self.public_url = url_name
+
+    def upload_from_string(self, content):
+        self.uploaded = True
+        self.public_url = 'test/test.com'
+        self.string_content = content
+
+    def upload_from_file(self, content):
+        self.uploaded = True
+        self.public_url = 'test/test.com'
+        self.file_content = content
+
+    def download_as_text(self, encoding=None):
+        if self.uploaded:
+            return self.string_content
+        if self.test_data:
+            return self.test_data
+        return 'This is a test string from download_as_string'
+
+    def download_as_string(self):
+        if self.uploaded:
+            return self.string_content.encode('utf-8')
+        if self.test_data:
+            return self.test_data.encode('utf-8')
+        return 'This is a test string from download_as_string'.encode('utf-8')
+
+    def download_to_filename(self):
+        if self.uploaded:
+            return self.file_content
+        return 'This is a test from download_to_filename'
+
+    def open(self, mode=None): 
+        if self.test_data:
+            data =  self.test_data       
+        else:
+            raise ValueError
+
+        return [line.encode('utf-8') for line in data]
 
 @pytest.fixture
 def app():
@@ -47,6 +100,26 @@ def file_success():
     file.name.endswith(".md").return_value = False
     file.name.endswith(".jpg").return_value = True
     file.read.return_value = "File Sucess"
+    return file
+
+
+@pytest.fixture
+def comment_success():
+    file = MagicMock()
+    file.return_value = "Text from the start"
+    file.endswith.return_value = True
+    file.name.return_value = "1680980576.6452136:sandy"
+    file.read.return_value = "Hello World"
+    return file
+
+
+@pytest.fixture
+def comment_failed():
+    file = MagicMock()
+    file.return_value = "Text from the start"
+    file.endswith.return_value = True
+    file.name.return_value = "1680980576.6452136:sandy"
+    file.read.return_value = ""
     return file
 
 
@@ -171,6 +244,36 @@ def test_upload_sucess(file_success):
     with patch.object(be, 'upload', return_value=True):
         val = be.upload(file_success, file_success.name)
     assert val == True
+
+
+def test_comments_upload_sucess(comment_success):
+    be = Backend('app', mock_function())
+    success = be.upload_comment("sandy", comment_success.read())
+    assert success == True
+
+
+def test_comments_upload_fail(comment_failed):
+    be = Backend('app', mock_function())
+    success = be.upload_comment("sandy", comment_failed.read())
+    assert success == False
+
+def test_get_all_comments():
+    be = Backend('app', mock_function())
+    with patch.object(be.bucket_messages, 'list_blobs') as mock_list_blobs:
+        mock_blob = blob_object("1680933371.7467146:sandy")
+        mock_blob.upload_from_string("Hola Mundo")
+        mock_blob2 = blob_object("1680936363.3217728:sandy")
+        mock_blob2.upload_from_string("Hello")
+        mock_list_blobs.return_value = [mock_blob, mock_blob2]
+        comments_dict = be.get_comments()
+        print(comments_dict)
+
+    test_dict = {
+        "user": "sandy",
+        "time": "2023-04-08 05:56",
+        "content": "Hola Mundo"
+    }
+    assert test_dict in comments_dict
 
 def test_get_all_pages_names():
     be = Backend(app, mock_function())
