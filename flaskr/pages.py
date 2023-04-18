@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from google.cloud import storage
@@ -5,7 +6,7 @@ import os
 import uuid
 import zipfile
 from flaskext.markdown import Markdown
-
+import csv
 
 def make_endpoints(app, Backend):
     """Connects the frontend with the established routes and the backend.
@@ -75,7 +76,7 @@ def make_endpoints(app, Backend):
         """
         return render_template("main.html")
 
-    @app.route('/pages')
+    @app.route('/pages', methods=['GET','POST'])
     def pages():
         """Calls the Backend to look up all existing pages in the GCS bucket corresponding to the Markdown files,
         it then gets all the names and sends the user to a page where all available pages are shown as hyperlinks.
@@ -83,7 +84,15 @@ def make_endpoints(app, Backend):
         GET: Gets page names from the Backend and sends the user to a page showing all of them as a list of hyperlinks.
         """
         page_names = Back_end.get_all_page_names()
-        return render_template('pages.html', page_names=page_names)
+        sort="Alphabetical"
+
+        if request.args.get("sort_by")=="Popularity":
+            sort="Popularity"
+            page_names=Back_end.page_sort_by_popularity()
+            #get list of page names by Popularity
+        # default list is equal to Alphabetically
+        return render_template('pages.html',sort=sort,page_names=page_names)
+        
 
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
@@ -92,9 +101,14 @@ def make_endpoints(app, Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        html_content = Back_end.get_wiki_page(sub_page)
-        # TODO: replace with single template instead of the dynamic {sub_page}.html
-        return render_template(f'{sub_page}.html', content=html_content)
+        
+        md_content = Back_end.get_wiki_page(sub_page)
+        return render_template(f'sub_pages.html', content=md_content)
+
+    #@app.route('/pages', methods=['GET'])
+    #def dropdown():
+        #sort_by=["Alphabetically","Popularlity"]
+        #return render_template("pages.html",sort_by=sort_by)
 
     @app.route('/about')
     def about():
@@ -154,6 +168,9 @@ def make_endpoints(app, Backend):
 
         GET: Log out and redirects user to initial page
         """
+        if Back_end.current_username !="":
+            if Back_end.current_user.is_authenticated:
+                Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 
@@ -166,6 +183,9 @@ def make_endpoints(app, Backend):
         GET: Upload Page
         POST: Takes the file passed as an input in the form and sents it to the Backend, redirects the user to the Home page.
         """
+
+        if Back_end.current_user.is_authenticated:
+            Back_end.add_to_history("Upload")
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
         if request.method == 'POST':
             uploaded_file = request.files['upload']
@@ -272,7 +292,7 @@ def make_endpoints(app, Backend):
 
         GET: Calls Backend and fetch images, sends user to the Images page where are images are displayed.
         """
-        image_lst = Back_end.get_image()
+        image_lst = Back_end.get_image()        
         return render_template('images.html', image_lst=image_lst)
 
     @app.errorhandler(405)
