@@ -12,6 +12,3 @@ Werkzeug==2.2.2
 Flask-Markdown==0.3
 tensorflow[keras]
 numpy
-#base64
-#hashlib
-#os

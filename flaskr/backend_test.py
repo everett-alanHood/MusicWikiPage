@@ -2,63 +2,8 @@ from flaskr.backend import Backend
 from unittest.mock import MagicMock, patch
 import pytest
 from google.cloud import storage
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.text import tokenizer_from_json
-from flaskr.mock_test import storage_client_mock, mock_model_load, mock_tokenizer_from_json
+from flaskr.mock_test import storage_client_mock, mock_model_load, mock_tokenizer_from_json, blob_object
 
-class blob_object:
-
-    def __init__(self, blob_name, test_data=None):
-        self.test_data = test_data
-        self.name = blob_name
-        self.public_url = False
-        self.uploaded = None
-
-    def exists(self):
-        if not self.public_url:
-            return False
-        else:
-            return True
-
-    def _set_public_url(self, url_name):
-        self.public_url = url_name
-
-    def upload_from_string(self, content):
-        self.uploaded = True
-        self.public_url = 'test/test.com'
-        self.string_content = content
-
-    def upload_from_file(self, content):
-        self.uploaded = True
-        self.public_url = 'test/test.com'
-        self.file_content = content
-
-    def download_as_text(self, encoding=None):
-        if self.uploaded:
-            return self.string_content
-        if self.test_data:
-            return self.test_data
-        return 'This is a test string from download_as_string'
-
-    def download_as_string(self):
-        if self.uploaded:
-            return self.string_content.encode('utf-8')
-        if self.test_data:
-            return self.test_data.encode('utf-8')
-        return 'This is a test string from download_as_string'.encode('utf-8')
-
-    def download_to_filename(self):
-        if self.uploaded:
-            return self.file_content
-        return 'This is a test from download_to_filename'
-
-    def open(self, mode=None): 
-        if self.test_data:
-            data =  self.test_data       
-        else:
-            raise ValueError
-
-        return [line.encode('utf-8') for line in data]
 
 @pytest.fixture
 def app():
@@ -140,19 +85,13 @@ def invalid_user():
     user_info['password'] = "invalid_password"
     return user_info
 
-def mock_function(mock_SC=True, mock_SC_blobs=dict(), 
-                  mock_model=True, mock_token=True, 
-                  length=1600):
+def mock_function(mock_SC=True, mock_SC_blobs=dict(), length=1600):
     mocked = [None, mock_model_load, mock_tokenizer_from_json, length]
     
     if not mock_SC:
         mocked[0] = storage.Client()
     else:
         mocked[0] = storage_client_mock(mock_SC_blobs)
-    if not mock_model:
-        mocked[1] = load_model
-    if not mock_token:
-        mocked[2] = tokenizer_from_json
         
     return mocked
 

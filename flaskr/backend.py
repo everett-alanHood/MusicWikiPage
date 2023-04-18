@@ -2,7 +2,7 @@ from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 #Hasing password
-import bcrypt  #gensalt, hashpw, checkpw
+import bcrypt 
 import base64
 import hashlib
 import os
@@ -86,9 +86,9 @@ class Backend:
         # Pre-Processing for model input
         self.max_data_len = data_len
         stop_words = get_stopwords()
-        del stop_words
         self.re_stop_word = re.compile(f"\\b({'|'.join(stop_words)})\\b")
         self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
+        del stop_words
 
         # Load model
         path = 'gs://minorbugs_model/model_0'

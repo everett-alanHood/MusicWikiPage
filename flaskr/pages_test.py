@@ -5,9 +5,7 @@ from flaskr import create_app
 from werkzeug.datastructures import FileStorage
 import pytest
 from google.cloud import storage
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.text import tokenizer_from_json
-import flask, os
+import os
 
 
 # See https://flask.palletsprojects.com/en/2.2.x/testing/
@@ -20,8 +18,6 @@ def mock_backend():
     mock_backend.return_value = mock_backend
     return mock_backend
 
-# See https://flask.palletsprojects.com/en/2.2.x/testing/
-# for more info on testing
 @pytest.fixture
 def app(mock_backend):
     app = create_app({
