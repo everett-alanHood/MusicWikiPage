@@ -37,11 +37,14 @@ class Backend:
         - model        (Keras model): Keras model which is trained for text summarization
         - tokenize     (Keras tokenizer): Tokenizes data for model generation        
     Methods:
-        - get_all_page_names:
-        - get_wiki_page:
-        - upload:
-        - remove_stop_words:
-        -         
+        - get_all_page_names: ...
+        - get_wiki_page: Gets content from an uploaded sub-page
+        - upload: Uploads a file to GCS
+        - remove_stop_words: Calls re_stop_word to remove all stop words before generating a summary
+        - re_link: Calls re_link to remove all links before generating a summary
+        - upload_summary: Uploads an md file summary to GCS
+        - url_check: Checks if all links in an md file are valid
+        - get_image: 
     """
 
     def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
@@ -113,10 +116,12 @@ class Backend:
 
     def get_wiki_page(self, page_name):
         """
-        Args: A page name (Str)
-        Explain: Converts a specific markdown file to html, 
-                 adds the header, and stores that in local files.
-        Returns: N/A
+        Converts a specific markdown file to html, 
+        adds the header, and stores that in local files.
+        Args: 
+            - A page name (Str)
+        Returns: 
+            - N/A
         """
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
@@ -191,7 +196,7 @@ class Backend:
         # Converts string to data that model can understand
         token_data_encode = np.array([self.tokenize.texts_to_sequences([cleaned_str])])[0]
         data_decode = np.zeros([1, token_data_encode.shape[1]])
-        data_decode[0] = self.tokenizer.word_index['<sos>']
+        data_decode[0] = self.tokenize.word_index['<sos>']
         
         # Generates summary and converts back to readable data 
         token_summary = self.model.predict([token_data_encode, data_decode])
@@ -207,8 +212,8 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
+        Checks if an md file has valid links to the site
         Args: Contents of a file (IO), the filename (Str)
-        Explain: Checks if a .md file has valid links to the site
         Returns: (Boolean)
         """
         content = str(file_content.read())
@@ -225,10 +230,12 @@ class Backend:
 
     def get_image(self):
         """
-        Args: Nothing
-        Explain: Retrieves image urls from google cloud 
-                 buckets (Content and Images), excluding authors.
-        Returns: List of image urls (List)
+        Retrieves image urls from google cloud 
+        buckets (Content and Images), excluding authors.
+        Args: 
+            - N/A
+        Returns: 
+            - List of image urls (List)
         """
         #storage_client = storage.Client()
         #bucket = self.bucket_content
