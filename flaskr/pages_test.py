@@ -60,18 +60,15 @@ def test_pages(client, mock_backend):
     assert b"<a href=\"/pages/test_page0\">test_page0</a>" in resp.data
     assert b"<a href=\"/pages/test_page1\">test_page1</a>" in resp.data
 
-@patch("flaskr.pages.render_template")
-def test_pages_next(mock_render, client, mock_backend):
+def test_pages_next(client, mock_backend):
     test_data = ("Test Content", "Test Summary")
     mock_backend.get_wiki_page.return_value = test_data
-    mock_render.return_value = 'Test Content'
-
+    
     resp = client.get("/pages/sub_pages")
 
-    mock_render.assert_called_once_with("sub_pages.html", content=test_data[0], summary=test_data[1])
-
     assert resp.status_code == 200
-    assert b"Test Content" == resp.data
+    assert b'Test Content' in resp.data
+    assert b'Test Summary' in resp.data
 
 
 def test_about(client, mock_backend):
