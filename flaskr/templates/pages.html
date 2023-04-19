@@ -6,7 +6,9 @@
     <body>
         <div>       
             {% include 'header.html' %}
-
+            <h3>Sort by </h3>
+            <p><a href="/pages?sort_by=Popularity">popularity</a>
+            <p><a href="/pages?sort_by=Alphabetical">alphabetical</a>
             <h3>Sub-Pages</h3>
             {% for page_name in page_names %}
                 <p> <a href="/pages/{{page_name}}">{{page_name}}</a> <br/></p>
