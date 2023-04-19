@@ -1,38 +1,27 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from datetime import datetime
 #Hasing password
-import bcrypt  #gensalt, hashpw, checkpw
+import bcrypt 
 import base64
 import hashlib
 import os
 import markdown
 
-# Data processing
-""" Pip install nltk, numpy, tensorflow """
-import re
-import nltk
-from nltk.corpus import stopwords
-nltk.download('stopwords')
-import numpy as np
-import re
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.text import tokenizer_from_json
-from keras.utils import custom_object_scope
-
-
 # for csv methods
 import csv
 from collections import deque
 
+# Data processing
+""" Pip install nltk, numpy, tensorflow """
+from flaskr.stopwords import get_stopwords
+import re
+import numpy as np
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.text import tokenizer_from_json
 import time
 from datetime import datetime
-"""
-Explanation
-Args:
-Returns:
-"""
-
 
 class Backend:
     """
@@ -40,7 +29,7 @@ class Backend:
     running the site and connecting to GCS.
 
     Attributes:
-        - bucket_{content,users,images,summary} (GCS Object): buckets of GCS
+        - bucket_{content,users,images,summary} (GCS Object): buckets from minorbugs GCS
         - all_pages    (set): ...
         - max_data_len (int): Max length of input to generate summary
         - re_stop_word (Regex pattern object): Removes all stop words from a given string
@@ -49,21 +38,24 @@ class Backend:
         - tokenize     (Keras tokenizer): Tokenizes data for model generation        
     Methods:
         - get_all_page_names: ...
-        - get_wiki_page: Gets content from an uploaded sub-page
-        - upload: Uploads a file to GCS
+        - get_wiki_page:     Gets content from an uploaded sub-page
+        - upload:            Uploads a file to GCS
         - remove_stop_words: Calls re_stop_word to remove all stop words before generating a summary
-        - re_link: Calls re_link to remove all links before generating a summary
-        - upload_summary: Uploads an md file summary to GCS
-        - url_check: Checks if all links in an md file are valid
-        - get_image: 
+        - re_link:           Calls re_link to remove all links before generating a summary
+        - upload_summary:    Uploads an md file summary to GCS
+        - url_check:         Checks if all links in an md file are valid
+        - get_image:         Retrieve all images from GCS
+        - sign_up:           Signs a user up for a wiki account, asssuming they dont have one
+        - sign_in:           Signs in a user their account
     """
 
     def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
         """
+        Initializes and creates necessary attributes for backend.\n
         Args: 
-            An App from flask (ex. Flask(__name__) )
-        Explain: 
-            Initializes and creates necessary attributes for backend
+            - App from flask (ex. Flask(__name__) )      
+            - length 4 vector (Optional)
+                - (GCS client, keras load_model instance, keras tokenizer from json instance, max data length)      
         """
         SC, ml_load, token_from_json, data_len = calls
 
@@ -76,47 +68,64 @@ class Backend:
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_summary = storage_client.bucket('minorbugs_summary')
-        
         self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
         self.bucket_users.bucket_history = storage_client.bucket('user_history')        
         self.bucket_messages = storage_client.bucket('minorbugs_comments')
+        
         #page urls
         pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
-            'signup', 'images'
+            'signup', 'images', 'history'
         }
         sub_pages = {
             'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre',
             'form', 'dynamics', 'texture'
         }
         self.all_pages = pages | sub_pages
-
+        self.current_username = ""
+        
         # Pre-Processing for model input
         self.max_data_len = data_len
-        stop_words = stopwords.words('english')
+        stop_words = get_stopwords()
         self.re_stop_word = re.compile(f"\\b({'|'.join(stop_words)})\\b")
         self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
         del stop_words
 
         # Load model
-        path = 'gs://minorbugs_model/temp_model/'
+        path = 'gs://minorbugs_model/model_0/'
         self.model = ml_load(f'{path}saved_model')
         
         # Load tokenizer
-        blob = storage_client.bucket('minorbugs_model').blob('temp_model/tokenizer.json')
+        blob = storage_client.bucket('minorbugs_model').blob('model_0/tokenizer.json')
         token_json = blob.download_as_string()
         self.tokenize = token_from_json(token_json)
-        self.all_pages = self.pages | self.sub_pages
-        self.current_username = ""
 
     def get_history(self):
+        """
+        Args: 
+            Nothing
+        Explain:
+            gets the user's history from bucket_users
+        Returns:
+            list of the user's pages and times
+        """
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
-
         content = content.replace('\'', '')
-        return content.strip('][\'').split(', ')
+        content = content.strip('][\'').split(', ')
+        if content[0] == "":
+            return content[1:]
+        return content
     
     def add_to_history(self, page_name):
+        """
+        Args: 
+            name of a page (str)
+        Explain:
+            add the page name and time to the user's bucket
+        Returns:
+            nothing
+        """
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         
@@ -137,19 +146,16 @@ class Backend:
         history.append(timestamp)
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
-
+    
     def get_all_page_names(self):
         """
+        Gets all markdown sub-pages from google cloud buckets.\n
         Args: 
-            Nothing
-        Explain:
-            Gets all markdown sub-pages from google cloud buckets
+            - N/A
         Returns:
-            List of sub-page names (List)
+            - List of sub-page names (List)
         """
         all_blobs = list(self.bucket_content.list_blobs())
-        #Could add a feature where users upload their own content??
-        
         page_names = []
         blocklist=["test_model","TestMeet","test_url"]
         for blob in all_blobs:
@@ -256,7 +262,6 @@ class Backend:
         main = markdown.markdown(md_content)
     
         md_blob = self.bucket_summary.blob(f'{page_name}.md')
-        print(self.tokenize.word_index["hello"])
         if md_blob.exists():   
             md_content = md_blob.download_as_string().decode('utf-8')
             summary = markdown.markdown(md_content)
@@ -365,21 +370,33 @@ class Backend:
         return True
         
     def remove_stop_words(self, text):
+        """
+        Removes stop words from text.\n
+        Args:
+            - Original text (str)
+        Returns:
+            - Cleaned text (str)
+        """        
         return self.re_stop_word.sub('', text)
 
     def remove_links(self, text):
+        """
+        Removes links from text.\n
+        Args:
+            - Original text (str)
+        Returns:
+            - Cleaned text (str)
+        """        
         return self.re_link.sub('', text)
 
     def upload_summary(self, filename):
         """
         Pre-Processes and cleans file text, generates
         summary from model and uploads the summary
-        to the minorbugs_summary bucket
-
-        args:
-            - file_name (Str), name of .md file
-
-        returns:
+        to the minorbugs_summary bucket.\n
+        Args:
+            - filename (Str), name of .md file
+        Returns:
             - (Boolean)
         """
         md_blob = self.bucket_content.blob(filename)
@@ -441,7 +458,7 @@ class Backend:
     def get_image(self):
         """
         Retrieves image urls from google cloud 
-        buckets (Content and Images), excluding authors.
+        buckets (Content and Images), excluding authors.\n
         Args: 
             - N/A
         Returns: 
@@ -464,12 +481,14 @@ class Backend:
 
     def get_about(self):
         """
-        Args: Nothing
-        Explain: Retrieves image urls from google cloud 
-                 buckets (Images), only authors.
-        Returns: List of image urls and author names (List)
+        Retrieves image urls from google cloud 
+        buckets (Images), only authors.\n
+        Args: 
+            - Nothing
+        Returns: 
+            - List of image urls and author names (List)
         """
-        storage_client = storage.Client()
+        # storage_client = storage.Client()
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
         for blob in blobs:
@@ -486,10 +505,12 @@ class Backend:
 
     def sign_up(self, user_info):
         """
-        Args: A users info (Dict(name, username, password))
-        Explain: Adds user to GCB (users), if they dont 
-                 already exist and allows login.
-        Returns: (Boolean), A user's name or empty (str)
+        Adds user to GCB (users), if they dont 
+        already exist and allows login.\n
+        Args: 
+            - A users info, Dict(name, username, password)
+        Returns: 
+            - (Boolean), A user's name or empty (str)
         """
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
@@ -500,20 +521,28 @@ class Backend:
         user_pass = user_info['password']
         name = user_info['name']
 
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history = ["Account Began", timestamp]
+
+
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
 
-        user_blob.upload_from_string(f"{name}\n{hash_pass}")
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+        self.current_username = user_name
         return True, name
 
     def sign_in(self, user_check):
         """
-        Args: Users sign-in info ( Dict(username, password) )
-        Explain: Checks if an existing user entered the correct 
-                 credentials and allows for login.
-        Returns: (Boolean), A user's name or empty (str)
+        Checks if an existing user entered the correct 
+        credentials and allows for login.\n
+        Args: 
+            - Users sign-in info ( Dict(username, password) )
+        Returns: 
+            - (Boolean), A user's name or empty (str)
         """
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
@@ -524,6 +553,22 @@ class Backend:
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
+        
+        if len(content) == 2:
+            content.append("")
+
+        raw_log = content[2]
+        raw_log = raw_log.replace('[', '')
+        raw_log = raw_log.replace(']', '')
+        raw_log = raw_log.replace('\'', '')
+        raw_log = raw_log.split(', ')
+
+        history = raw_log
+        
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history.append("Logged In")
+        history.append(timestamp)
 
         user_pass = user_check['password']
         mixed = f'{user_pass}hi{user_name}'
@@ -532,4 +577,10 @@ class Backend:
         if not bcrypt.checkpw(encoded, hash_pass):
             return False, ''
 
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+        self.current_username = user_name
+
         return True, name
+
+    def get_log(self):
+        pass

@@ -8,7 +8,7 @@ import zipfile
 from flaskext.markdown import Markdown
 import csv
 
-def make_endpoints(app, Backend):
+def make_endpoints(app, backend):
     """Connects the frontend with the established routes and the backend.
 
     Attributes:
@@ -22,6 +22,8 @@ def make_endpoints(app, Backend):
     login_manager.session_protection = 'strong'
     Markdown(app)
     Back_end = backend(app)
+
+
 
     class User(UserMixin):
         """User Class that is used by the Login Manager and browser.
@@ -74,11 +76,12 @@ def make_endpoints(app, Backend):
 
         GET: Home page
         """
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Home")
         return render_template("main.html")
 
     @app.route('/pages', methods=['GET','POST'])
     def pages():
-        
         """Description: Have two hyperlink that give the sorting method that the hyperlink for 
                   subpages will display \n
         Args:
@@ -104,9 +107,10 @@ def make_endpoints(app, Backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        print(Back_end.get_wiki_page(sub_page))
         main,summary = Back_end.get_wiki_page(sub_page)
-
+        if Back_end.current_username != "":
+            sub_page_cap=sub_page.capitalize()
+            Back_end.add_to_history(sub_page_cap)
         
         return render_template(f'sub_pages.html', content=main,summary=summary)
 
@@ -116,6 +120,8 @@ def make_endpoints(app, Backend):
 
         GET: Calls Backend to get all Authors information and pictures, then sends the user to the about page that shows all the author's corresponding info.
         """
+        if Back_end.current_username != "":
+            Back_end.add_to_history("About")
         authors = Back_end.get_about()
         return render_template('about.html', authors=authors)
 
@@ -168,9 +174,8 @@ def make_endpoints(app, Backend):
 
         GET: Log out and redirects user to initial page
         """
-        if Back_end.current_username !="":
-            if Back_end.current_user.is_authenticated:
-                Back_end.add_to_history("Logged Out")
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 
@@ -184,9 +189,9 @@ def make_endpoints(app, Backend):
         POST: Takes the file passed as an input in the form and sents it to the Backend, redirects the user to the Home page.
         """
 
-        if Back_end.current_user.is_authenticated:
-            Back_end.add_to_history("Upload")
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Upload")
         if request.method == 'POST':
             uploaded_file = request.files['upload']
             filename = os.path.basename(uploaded_file.filename)
@@ -242,16 +247,14 @@ def make_endpoints(app, Backend):
 
     # TODO Get rid of this, and just replace with Back_end.upload
     def uploadImage(f, filename):
-        """Calls upon the Backend object upload method, passing a IO object
-        and a String representing the file and its filename respectively.
-
+        """
+        Calls upon the Backend object upload method, passing a IO object
+        and a String representing the file and its filename respectively.\n
         Args:
             f: IO object that is the content to be uploaded.
             filename: String representation of the passed file name
-
         Returns:
             Boolean representing if the upload was successful or not.
-
         """
         return Back_end.upload(f, filename)
 
@@ -292,7 +295,9 @@ def make_endpoints(app, Backend):
 
         GET: Calls Backend and fetch images, sends user to the Images page where are images are displayed.
         """
-        image_lst = Back_end.get_image()        
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Images")
+        image_lst = Back_end.get_image()
         return render_template('images.html', image_lst=image_lst)
 
     @app.errorhandler(405)
@@ -305,6 +310,10 @@ def make_endpoints(app, Backend):
         flash('Incorrect method used, try again')
         return redirect(url_for('home')), 405
 
+    @app.route('/log')
+    def log():
+        return render_template('log.html')
+
     """
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -316,3 +325,14 @@ def make_endpoints(app, Backend):
         {% endif %}
     {% endwith %}
     """
+
+    @app.route('/history', methods=['GET', 'POST'])
+    def history():
+        '''This takes the user's history and sendss it to the frontend page history.html to display the user's history.
+        Personal preference, but the code below isn't necessary since the user doesn't need to know they're viewing their history.'''
+        # if Back_end.current_username is not "":
+        #     Back_end.add_to_history("History")
+        history_summary = Back_end.get_history()
+        history_summary.reverse()
+        user_name = Back_end.current_username        
+        return render_template('history.html', history_summary = history_summary, user_name = user_name)

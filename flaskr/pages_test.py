@@ -4,8 +4,12 @@ from unittest.mock import MagicMock, Mock, patch, ANY
 from flaskr import create_app
 from werkzeug.datastructures import FileStorage
 import pytest
-import flask, os
+from google.cloud import storage
+import os
 
+
+# See https://flask.palletsprojects.com/en/2.2.x/testing/
+# for more info on testing
 
 @pytest.fixture
 def mock_backend():
@@ -21,6 +25,7 @@ def app(mock_backend):
         'LOGIN_DISABLED': True,
     }, mock_backend)
     return app
+
 
 @pytest.fixture
 def client(app):
@@ -40,8 +45,6 @@ def login_client(login_app):
     return login_app.test_client()
 
 
-# TODO(Checkpoint (groups of 4 only) Requirement 4): Change test to
-# match the changes made in the other Checkpoint Requirements.
 def test_home_page(client):
     resp = client.get("/")
     assert resp.status_code == 200  #This check that the connection to homepage is good
@@ -60,15 +63,24 @@ def test_pages(client, mock_backend):
 
 @patch("flaskr.pages.render_template")
 def test_pages_next(mock_render, client, mock_backend):
-    mock_backend.get_wiki_page.return_value = "Test Content"
-    mock_render.return_value = "Test Content"
-
+    mock_backend.get_wiki_page.return_value=("Chord is a group of notes","a group of notes")
+    mock_backend.current_username.return_value="test"
+    mock_backend.add_to_history.return_value=None
     resp = client.get("/pages/sub_pages")
+    assert resp.status_code == 200  #This check that the connection to about is good
+    assert b"a group of notes" in resp.data
+    assert b"Chord is a group of notes" in resp.data
+  
+        
+    #mock_backend.get_wiki_page.return_value = "Test Content"
+    #mock_render.return_value = "Test Content"
 
-    mock_render.assert_called_once_with("sub_pages.html", content="Test Content")
-    print(resp.data)
-    assert resp.status_code == 200
-    assert b"Test Content" == resp.data
+    #resp = client.get("/pages/sub_pages")
+
+    #mock_render.assert_called_once_with("sub_pages.html", content="Test Content")
+    #print(resp.data)
+    #assert resp.status_code == 200
+    #assert b"Test Content" == resp.data
 
 
 def test_about(client, mock_backend):
@@ -166,10 +178,21 @@ def test_get_about(client):
     resp = client.get("/about")
     assert resp.status_code == 200  #This check that the connection to about is good
     assert b"Your Authors" in resp.data  #This check if the cilent can grabs the data within about
-def test_get_page_summary(client):
-    resp = client.get("/pages/chord")
+def test_get_page_summary(client,mock_backend):
+    mock_backend.get_wiki_page.return_value=("Chord is a group of notes","a group of notes")
+    resp = client.get("/pages/sub_pages")
     assert resp.status_code == 200  #This check that the connection to about is good
-    assert b"unk" in resp.data  #This check if the cilent can grabs the data within about
+    assert b"a group of notes" in resp.data
+
+def test_get_page_summary_None(client,mock_backend):
+    mock_backend.get_wiki_page.return_value=("Chord is a group of notes",None)
+    resp = client.get("/pages/sub_pages")
+
+    mock_backend.get_wiki_page.return_value=("Chord is a group of notes","a group of notes")
+    new_resp = client.get("/pages/sub_pages")
+    print(str(resp.decode("utf-8")))    
+    assert resp.status_code == 200  #This check that the connection to about is good
+    assert new_resp.data != resp.data
 
 # def test_pages(client):
 #     resp = client.get("/pages")
@@ -205,6 +228,14 @@ def test_signup_success(mock_uuid, login_client, mock_backend):
 #     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
 
 # user vincent username is username and password is password
+
+'''
+This would be my test for the update but I'm not sure how I could mock a logged in user
+# def test_history(client):
+#     resp = client.get("/history")
+#     assert resp.status_code == 200  #This check that the connection to about is good
+#     assert b"History" in resp.data  #This check if the cilent can grabs the data within about
+'''
 def test_signup_fail(client, mock_backend):
     mock_backend.sign_up.return_value = (False, "Test Name")
     resp = client.post("/auth_signup",
