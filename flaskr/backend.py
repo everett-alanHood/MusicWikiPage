@@ -18,10 +18,16 @@ from collections import deque
 from flaskr.stopwords import get_stopwords
 import re
 import numpy as np
-# from tensorflow.keras.models import load_model
-# from tensorflow.keras.preprocessing.text import tokenizer_from_json
 import time
 from datetime import datetime
+
+
+
+
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.preprocessing.text import tokenizer_from_json
+from flaskr.mock_test import storage_client_mock, mock_model_load, mock_tokenizer_from_json
+
 
 class Backend:
     """
@@ -49,7 +55,7 @@ class Backend:
         - sign_in:           Signs in a user their account
     """
 
-    def __init__(self, app, calls=(storage.Client(), load_model, tokenizer_from_json, 1600)):
+    def __init__(self, app, calls=(storage.Client(), mock_model_load, mock_tokenizer_from_json, 1600)):
         """
         Initializes and creates necessary attributes for backend.\n
         Args: 
