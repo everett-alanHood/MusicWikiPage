@@ -197,6 +197,14 @@ def test_signup_success(mock_uuid, login_client, mock_backend):
 #     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
 
 # user vincent username is username and password is password
+
+'''
+This would be my test for the update but I'm not sure how I could mock a logged in user
+# def test_history(client):
+#     resp = client.get("/history")
+#     assert resp.status_code == 200  #This check that the connection to about is good
+#     assert b"History" in resp.data  #This check if the cilent can grabs the data within about
+'''
 def test_signup_fail(client, mock_backend):
     mock_backend.sign_up.return_value = (False, "Test Name")
     resp = client.post("/auth_signup",
