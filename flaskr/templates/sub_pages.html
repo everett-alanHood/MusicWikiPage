@@ -1,2 +1,5 @@
 {% include 'header.html' %}
+{% if summary != None %}
+    {{summary|safe}}
+{% endif %}
 {{content|safe}}
