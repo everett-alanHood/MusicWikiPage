@@ -1,14 +1,15 @@
 from flaskr import pages
 from flask import Flask
+from flaskr.backend import Backend
 import logging
-
+from flaskr.backend import Backend
 logging.basicConfig(level=logging.DEBUG)
 
 
 # The flask terminal command inside "run-flask.sh" searches for
 # this method inside of __init__.py (containing flaskr module
 # properties) as we set "FLASK_APP=flaskr" before running "flask".
-def create_app(test_config=None):
+def create_app(test_config=None, backend=Backend):
     # Create and configure the app.
     app = Flask(__name__, instance_relative_config=True)
 
@@ -26,7 +27,7 @@ def create_app(test_config=None):
 
     # TODO(Project 1): Make additional modifications here for logging in, backends
     # and additional endpoints.
-    pages.make_endpoints(app)
+    pages.make_endpoints(app, backend)
 
     # """For login and sign up in backend.py"""
     app.secret_key = 'temp_key'
