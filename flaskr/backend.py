@@ -31,14 +31,14 @@ class Backend:
 
     Attributes:
         - bucket_{content,users,images,summary} (GCS Object): buckets from minorbugs GCS
-        - all_pages    (set): ...
+        - all_pages    (set): All official wiki pages
         - max_data_len (int): Max length of input to generate summary
         - re_stop_word (Regex pattern object): Removes all stop words from a given string
         - re_link      (Regex pattern object): Removes all links from a given string
         - model        (Keras model): Keras model which is trained for text summarization
         - tokenize     (Keras tokenizer): Tokenizes data for model generation        
     Methods:
-        - get_all_page_names: ...
+        - get_all_page_names:Gets all .md pages from GCS content
         - get_wiki_page:     Gets content from an uploaded sub-page
         - upload:            Uploads a file to GCS
         - remove_stop_words: Calls re_stop_word to remove all stop words before generating a summary
@@ -103,36 +103,38 @@ class Backend:
 
     def get_history(self):
         """
+        Gets the user's history from bucket_users
         Args: 
-            Nothing
-        Explain:
-            gets the user's history from bucket_users
+            N/A
         Returns:
             list of the user's pages and times
         """
+        # Gets and cleans a users page history
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
         content = content.replace('\'', '')
         content = content.strip('][\'').split(', ')
+
         if content[0] == "":
             return content[1:]
         return content
     
     def add_to_history(self, page_name):
         """
+        Add the page name and time to the user's bucket \n
         Args: 
             name of a page (str)
-        Explain:
-            add the page name and time to the user's bucket
         Returns:
-            nothing
+            N/A
         """
+        # Get users data
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')
-        
+                
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
 
+        # Cleans log
         raw_log = content[2]
         raw_log = raw_log.replace('[', '')
         raw_log = raw_log.replace(']', '')
@@ -141,11 +143,13 @@ class Backend:
 
         history = raw_log
         
+        # Captures time and adds to users' history
         now = datetime.now()
         timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
         history.append(page_name)
         history.append(timestamp)
 
+        # Upload data
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
     
     def get_all_page_names(self):
@@ -156,15 +160,20 @@ class Backend:
         Returns:
             - List of sub-page names (List)
         """
+        # Gets all blobs from bucket_content
         all_blobs = list(self.bucket_content.list_blobs())
 
+        #Set up for getting pages
+        blocklist = ["test_model","TestMeet","test_url"]
         page_names = []
-        blocklist=["test_model","TestMeet","test_url"]
+
+        # Adds applicable pages to page_names
         for blob in all_blobs:
             name = blob.name.split('.')
             if name[0] not in blocklist and name[-1] == 'md':
                 page_names.append(name[0])
-                
+        
+        # Sort and return page_names
         page_names.sort()
         return page_names
         
@@ -177,30 +186,31 @@ class Backend:
         Returns:
             - Matrix made of str and int 
         """
-        bucket = self.bucket_page_stats
-        blob = bucket.get_blob("Dictionary by Popularity.csv")
+        # Get popularity stats
+        blob = self.bucket_page_stats.get_blob("Dictionary by Popularity.csv")
         downloaded_file = blob.download_as_text(encoding="utf-8")
         page_data_list = list(downloaded_file)
         data = []
         string = ""
-        for index ,character in enumerate(page_data_list):
+
+        # 
+        for index, character in enumerate(page_data_list):
             if (character == "," or character == "\r" or character == page_data_list[-1] ) and character != "\n":
-                print(str(page_data_list[-1]))
                 if character == page_data_list[-1]:
                     string = string + character
                 data.append(string)
                 string = ""
             elif character != "\n" and character != "\r":
                 string = string+character
+        
         temp = []
         true_data = []
         
-        for index , pairs in enumerate (data):
+        for index, pairs in enumerate (data):
             temp.append(pairs)            
             
-            if index%2 == 1:
+            if index % 2 == 1:
                 temp[1] = int(temp[1])
-                
                 true_data.append(temp.copy())
                 temp.clear()
         
@@ -243,7 +253,6 @@ class Backend:
         Returns:
             - HTML content (str)
         """
-        ### Transfered from pages.py ###
         bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")        
         data = self.make_popularity_list()
@@ -262,16 +271,15 @@ class Backend:
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         main = markdown.markdown(md_content)
-    
+
         md_blob = self.bucket_summary.blob(f'{page_name}.md')
         if md_blob.exists():   
             md_content = md_blob.download_as_string().decode('utf-8')
             summary = markdown.markdown(md_content)
         else:
-            summary=None
-        tuple=(main,summary)
-        print(str(tuple))
-        return tuple
+            summary = None
+
+        return (main, summary)
     
     def modify_page_analytics(self):
         """This check if a subpage analytics doesnt exist inside in the csv 
@@ -297,8 +305,7 @@ class Backend:
                 string = string + sub_page + "," + str(0) + "\r\n"
             
         blob.upload_from_string(string)
-            
-        csv_files = list(self.bucket_page_stats.list_blobs())
+
         return string
 
     def get_comments(self):
@@ -324,21 +331,24 @@ class Backend:
 
     def upload_comment(self, username, content):
         """
+        Receives a username and the comment content and formats the blob name as timestamp:username and then the contents of that blob
+        is the message. It is then uploaded to the Google Cloud Buckets and then served with all the other comments. \n
         Args:
-        username: String representation of the logged in username.
-        content: String representation of the comment typed out by the user in the comment text input.
-        Explain: Receives a username and the comment content and formats the blob name as timestamp:username and then the contents of that blob
-        is the message. It is then uploaded to the Google Cloud Buckets and then served with all the other comments.
+            - username: String representation of the logged in username.
+            - content: String representation of the comment typed out by the user in the comment text input.
         Returns: 
-        Boolean representing if the upload was successful or not.
+            - Boolean representing if the upload was successful or not.
         """
         if not content:
             return False
+
         timestamp = str(time.time())
         filename = timestamp + ":" + username
         message_blob = self.bucket_messages.blob(filename)
+
         if message_blob.exists():
             return False
+
         message_blob.upload_from_string(content)
         return True
 
@@ -455,6 +465,7 @@ class Backend:
                 pass
             else:
                 return False
+
         return True
 
     def get_image(self):
@@ -466,9 +477,6 @@ class Backend:
         Returns: 
             - List of image urls (List)
         """
-        #storage_client = storage.Client()
-        #bucket = self.bucket_content
-        blobs = list(self.bucket_content.list_blobs())
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
 
@@ -490,9 +498,9 @@ class Backend:
         Returns: 
             - List of image urls and author names (List)
         """
-        # storage_client = storage.Client()
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
+
         for blob in blobs:
             if blob.name.startswith("[Author]"):
                 blob_img = blob.public_url
@@ -502,7 +510,6 @@ class Backend:
                 continue
 
         images_lst.sort()
-        print(str(images_lst))
         return images_lst
 
     def sign_up(self, user_info):
@@ -526,7 +533,6 @@ class Backend:
         now = datetime.now()
         timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
         history = ["Account Began", timestamp]
-
 
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())

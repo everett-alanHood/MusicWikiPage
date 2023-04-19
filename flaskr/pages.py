@@ -110,7 +110,7 @@ def make_endpoints(app, backend):
         if Back_end.current_username != "":
             sub_page_cap=sub_page.capitalize()
             Back_end.add_to_history(sub_page_cap)
-        
+
         return render_template(f'sub_pages.html', content=main,summary=summary)
 
     @app.route('/about')
