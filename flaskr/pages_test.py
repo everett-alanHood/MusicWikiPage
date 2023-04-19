@@ -185,14 +185,15 @@ def test_get_page_summary(client,mock_backend):
     assert b"a group of notes" in resp.data
 
 def test_get_page_summary_None(client,mock_backend):
+    test_main = "Chord is a group of notes"
+    main_len=len(test_main)
     mock_backend.get_wiki_page.return_value=("Chord is a group of notes",None)
-    resp = client.get("/pages/sub_pages")
-
-    mock_backend.get_wiki_page.return_value=("Chord is a group of notes","a group of notes")
-    new_resp = client.get("/pages/sub_pages")
-    print(str(resp.decode("utf-8")))    
+    resp = client.get("/pages/sub_pages"
+    str_resp = resp.data.decode("utf-8")[:-main_len]
+     
     assert resp.status_code == 200  #This check that the connection to about is good
-    assert new_resp.data != resp.data
+    assert b"Chord" not in str_resp
+    assert b"Chord is a group of notes" not in str_resp
 
 # def test_pages(client):
 #     resp = client.get("/pages")
