@@ -18,9 +18,8 @@ from collections import deque
 from flaskr.stopwords import get_stopwords
 import re
 import numpy as np
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.text import tokenizer_from_json
-from keras.utils import custom_object_scope
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.preprocessing.text import tokenizer_from_json
 import time
 from datetime import datetime
 

@@ -109,7 +109,7 @@ def summary_lst_data():
                     'Last line in data' ]
     return summary_data
 
-def summary_model_pass(summary_name, summary_lst_data): 
+def test_summary_model_pass(summary_name, summary_lst_data): 
     # Passes due to lengh of data being in acceptable range 
     # i.e. less than max data length
     test_data = {summary_name : summary_lst_data}
@@ -120,7 +120,7 @@ def summary_model_pass(summary_name, summary_lst_data):
     test = back_end.upload_summary(summary_name)
     assert test == True 
 
-def summary_model_fail(summary_name, summary_lst_data): 
+def test_summary_model_fail(summary_name, summary_lst_data): 
     # Fails due to lengh of data being outside acceptable range  
     # i.e. lengh of data > max data length
     test_data = {summary_name : summary_lst_data}
@@ -130,7 +130,7 @@ def summary_model_fail(summary_name, summary_lst_data):
     test = back_end.upload_summary(summary_name)
     assert test == False
 
-def summary_uploaded(summary_name, summary_lst_data):
+def test_summary_uploaded(summary_name, summary_lst_data):
     # Tests if summary produced from 'upload_summary'
     # properly uploads summary to GCS
     test_data = {summary_name : summary_lst_data}
