@@ -20,6 +20,7 @@ import re
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
+from keras.utils import custom_object_scope
 import time
 from datetime import datetime
 
@@ -90,16 +91,15 @@ class Backend:
         self.re_stop_word = re.compile(f"\\b({'|'.join(stop_words)})\\b")
         self.re_link = re.compile(r'\[(.*?)\]\((.*?)\)')
         del stop_words
-
-        # Load model
-        path = 'gs://minorbugs_model/model_0/'
-        self.model = ml_load(f'{path}saved_model')
         
         # Load tokenizer
         blob = storage_client.bucket('minorbugs_model').blob('model_0/tokenizer.json')
         token_json = blob.download_as_string()
         self.tokenize = token_from_json(token_json)
 
+        # Load model
+        path = 'gs://minorbugs_model/model_0/'
+        self.model = ml_load(f'{path}saved_model', compile=False)
 
     def get_history(self):
         """
