@@ -84,6 +84,7 @@ def test_pages_next(mock_render, client, mock_backend):
 
 
 def test_about(client, mock_backend):
+    "Explain: test about page "
     mock_backend.get_about.return_value = [("test_uri0", "test_name0"),
                                            ("test_uri1", "test_name1")]
     resp = client.get("/about")
