@@ -66,9 +66,10 @@ def test_pages_next(mock_render, client, mock_backend):
     mock_backend.get_wiki_page.return_value = "Test Content"
     mock_render.return_value = "Test Content"
 
-    resp = client.get("/pages/test")
+    resp = client.get("/pages/sub_pages")
 
-    mock_render.assert_called_once_with("test.html", content="Test Content")
+    mock_render.assert_called_once_with("sub_pages.html", content="Test Content")
+    print(resp.data)
     assert resp.status_code == 200
     assert b"Test Content" == resp.data
 
@@ -196,6 +197,14 @@ def test_signup_success(mock_uuid, login_client, mock_backend):
 #     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
 
 # user vincent username is username and password is password
+
+'''
+This would be my test for the update but I'm not sure how I could mock a logged in user
+# def test_history(client):
+#     resp = client.get("/history")
+#     assert resp.status_code == 200  #This check that the connection to about is good
+#     assert b"History" in resp.data  #This check if the cilent can grabs the data within about
+'''
 def test_signup_fail(client, mock_backend):
     mock_backend.sign_up.return_value = (False, "Test Name")
     resp = client.post("/auth_signup",
@@ -222,3 +231,24 @@ def test_invalid_method(client, mock_backend):
     resp = client.get("/images", follow_redirects=True)
     assert resp.status_code == 405
     assert b"<a href=\"/\">/</a>" in resp.data
+
+
+def test_page_sort_alpha(client, mock_backend):
+    mock_backend.get_all_page_names.return_value = ['a_test', 'b_test', 'c_test']
+    resp = client.get('/pages', query_string={'sort_by': 'Alphabetical'})
+    
+    assert resp.status_code == 200
+    str_data = resp.data.decode('utf-8')
+    a_idx, b_idx, c_idx = str_data.find('a_test'), str_data.find('b_test'), str_data.find('c_test')
+    assert -1 < a_idx < b_idx < c_idx
+
+
+def test_page_sort_pop(client, mock_backend):
+    mock_backend.page_sort_by_popularity.return_value = ['3_test', '2_test', '1_test']
+    resp = client.get('/pages', query_string={'sort_by': 'Popularity'})
+
+    assert resp.status_code == 200
+    str_data = resp.data.decode('utf-8')
+    print(str_data)
+    idx_3, idx_2, idx_1 = str_data.find('3_test'), str_data.find('2_test'), str_data.find('1_test')
+    assert -1 < idx_3 < idx_2 < idx_1

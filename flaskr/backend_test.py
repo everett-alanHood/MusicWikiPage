@@ -252,5 +252,84 @@ def test_get_image():
         backend_images = be.get_image()
     assert images in backend_images
 
+def test_make_popularity_list():
+    be = Backend(app, mock_function())
+    with patch.object(be,
+                      'make_popularity_list',
+                       return_value=[
+                          ['chord',3], ['dynamics',21], ['form',5], ['harmony',0], ['melody',2],
+                          ['pitch',0], ['rhythm',0], ['scales',23], ['texture',12],
+                          ['timbre',6]
+                      ]):
+        pages = be.make_popularity_list()
+    assert type(pages[0]) == list
 
-# #test username:test password:test
+
+def test_get_history(valid_user):
+    back_end = Backend('app', mock_function())
+    back_end.sign_up(valid_user)
+    back_end.sign_in(valid_user)
+    history = back_end.get_history()
+    assert len(history) == 4
+
+def test_add_to_history(valid_user, page_name):
+    back_end = Backend('app', mock_function())
+    back_end.sign_up(valid_user)
+    back_end.sign_in(valid_user)
+    back_end.add_to_history(page_name)
+    history = back_end.get_history()
+    assert len(history) == 6
+#test username:test password:test
+
+### If using blob_test, follow format ###
+        # blob_test = {<name_of_blob>.<extension> : test data,
+        #              <name_of_blob>.<extension> : test data}
+
+def test_make_popularity_list_other():
+    test_info = {"Dictionary by Popularity.csv": 
+                 'hello,4\n\rthere,3\n\rworld,1\n\r'}
+    back_end = Backend('app', mock_function(mock_SC_blobs=test_info))
+    
+    make_actual = back_end.make_popularity_list()
+    expected = [['hello',4], ['there',3], ['world',1]]
+    
+    assert expected == make_actual
+
+def test_page_sort_by_pop():
+    test_info = {"Dictionary by Popularity.csv": 
+                 'hello,1\n\rthere,3\n\rworld,4\n\r'}
+    back_end = Backend('app', mock_function(mock_SC_blobs=test_info))
+    
+    pop_actual = back_end.page_sort_by_popularity()
+    expected = ['world', 'there', 'hello']
+    assert expected == pop_actual
+
+def test_sort_alpha():
+    test_info = {'world.md':None, 'there.md':None, 'hello.md':None}
+    back_end = Backend('app', mock_function(mock_SC_blobs=test_info))
+    
+    alpha_actual = back_end.get_all_page_names()
+    expected = ['hello', 'there', 'world']
+    
+    assert expected == alpha_actual
+
+def test_modify_page_analytics():
+    test_info = {"Dictionary by Popularity.csv": 
+                 'hello,1\n\rthere,3\n\rworld,2\n\r'}
+    back_end = Backend('app', mock_function(mock_SC_blobs=test_info))
+    
+    modify_actual = back_end.modify_page_analytics()
+    assert 'hello,1\r\nthere,3\r\nworld,2\r\n' == modify_actual
+
+def test_pop_increment():
+    test_info = {"Dictionary by Popularity.csv": 
+                 'hello,1\n\rthere,3\n\rworld,2\n\r'}
+    back_end = Backend('app', mock_function(mock_SC_blobs=test_info))
+    back_end.get_wiki_page('hello')
+
+    blob = back_end.bucket_page_stats.get_blob('Dictionary by Popularity.csv')
+    incr_actual = blob.download_as_text()
+    print(incr_actual)
+    assert 'hello,2\r\nthere,3\r\nworld,2\r\n' == incr_actual
+
+

@@ -1,12 +1,17 @@
 from google.cloud import storage
 from flask import Flask, render_template, redirect, request, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from datetime import datetime
 #Hasing password
 import bcrypt 
 import base64
 import hashlib
 import os
 import markdown
+
+# for csv methods
+import csv
+from collections import deque
 
 # Data processing
 """ Pip install nltk, numpy, tensorflow """
@@ -17,13 +22,6 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
 import time
 from datetime import datetime
-
-"""
-Explanation
-Args:
-Returns:
-"""
-
 
 class Backend:
     """
@@ -70,19 +68,22 @@ class Backend:
         self.bucket_users = storage_client.bucket('minorbugs_users')
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_summary = storage_client.bucket('minorbugs_summary')
+        self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
+        self.bucket_users.bucket_history = storage_client.bucket('user_history')        
         self.bucket_messages = storage_client.bucket('minorbugs_comments')
         
         #page urls
         pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
-            'signup', 'images'
+            'signup', 'images', 'history'
         }
         sub_pages = {
             'chord', 'harmony', 'pitch', 'rhythm', 'melody', 'scales', 'timbre',
             'form', 'dynamics', 'texture'
         }
         self.all_pages = pages | sub_pages
-
+        self.current_username = ""
+        
         # Pre-Processing for model input
         self.max_data_len = data_len
         stop_words = get_stopwords()
@@ -91,7 +92,7 @@ class Backend:
         del stop_words
 
         # Load model
-        path = 'gs://minorbugs_model/model_0'
+        path = 'gs://minorbugs_model/model_0/'
         self.model = ml_load(f'{path}saved_model')
         
         # Load tokenizer
@@ -99,6 +100,54 @@ class Backend:
         token_json = blob.download_as_string()
         self.tokenize = token_from_json(token_json)
 
+
+    def get_history(self):
+        """
+        Args: 
+            Nothing
+        Explain:
+            gets the user's history from bucket_users
+        Returns:
+            list of the user's pages and times
+        """
+        user_blob = self.bucket_users.blob(f'{self.current_username}')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
+        content = content.replace('\'', '')
+        content = content.strip('][\'').split(', ')
+        if content[0] == "":
+            return content[1:]
+        return content
+    
+    def add_to_history(self, page_name):
+        """
+        Args: 
+            name of a page (str)
+        Explain:
+            add the page name and time to the user's bucket
+        Returns:
+            nothing
+        """
+        user_blob = self.bucket_users.blob(f'{self.current_username}')
+        content = user_blob.download_as_string().decode('utf-8').split('\n')
+        
+        name = content[0]
+        hash_pass = content[1][2:-1].encode('utf-8')
+
+        raw_log = content[2]
+        raw_log = raw_log.replace('[', '')
+        raw_log = raw_log.replace(']', '')
+        raw_log = raw_log.replace('\'', '')
+        raw_log = raw_log.split(', ')
+
+        history = raw_log
+        
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history.append(page_name)
+        history.append(timestamp)
+
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+    
     def get_all_page_names(self):
         """
         Gets all markdown sub-pages from google cloud buckets.\n
@@ -108,30 +157,140 @@ class Backend:
             - List of sub-page names (List)
         """
         all_blobs = list(self.bucket_content.list_blobs())
-
         page_names = []
+        blocklist=["test_model","TestMeet","test_url"]
         for blob in all_blobs:
             name = blob.name.split('.')
-            if name[-1] == 'md':
+            if name[0] not in blocklist and name[-1] == 'md':
                 page_names.append(name[0])
-
+                
         page_names.sort()
         return page_names
+        
+    def make_popularity_list(self):
+        """
+        Creates matrix of page names and 
+        number times each page was visited.
+        Args:
+            - None
+        Returns:
+            - Matrix made of str and int 
+        """
+        bucket = self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")
+        downloaded_file = blob.download_as_text(encoding="utf-8")
+        page_data_list = list(downloaded_file)
+        data = []
+        string = ""
+        for index ,character in enumerate(page_data_list):
+            if (character == "," or character == "\r" or character == page_data_list[-1] ) and character != "\n":
+                print(str(page_data_list[-1]))
+                if character == page_data_list[-1]:
+                    string = string + character
+                data.append(string)
+                string = ""
+            elif character != "\n" and character != "\r":
+                string = string+character
+        temp = []
+        true_data = []
+        
+        for index , pairs in enumerate (data):
+            temp.append(pairs)            
+            
+            if index%2 == 1:
+                temp[1] = int(temp[1])
+                
+                true_data.append(temp.copy())
+                temp.clear()
+        
+        return true_data
+        
+    def page_sort_by_popularity(self):
+        """
+        Gets the list of the pages and how often they've been looked at unorganized
+        organizes them by popularity greatest to least \n
+        Args: 
+            N/A
+        Returns:
+            list of pages(str) without number ranking (list)
+        """
+        self.modify_page_analytics()
+        p_list=self.make_popularity_list()
 
+
+        
+        for next_pop in range(0, len(p_list)-1, 1):
+            highest = p_list[next_pop][1]
+            h_index = next_pop
+            for find_highest in range(next_pop, len(p_list), 1):
+                if p_list[find_highest][1] > highest:
+                    highest = p_list[find_highest][1]
+                    h_index = find_highest
+            p_list[next_pop], p_list[h_index] = p_list[h_index], p_list[next_pop]
+        
+        for page in range(len(p_list)):
+            p_list[page] = p_list[page][0]
+        
+        return p_list
+        
     def get_wiki_page(self, page_name):
         """
-        Converts a specific markdown file to html, 
-        adds the header, and stores that in local files.\n
+        Increments popularity value of sub page
+        and converts a markdown file to HTML.\n       
         Args: 
-            - A page name (Str)
-        Returns: 
-            - N/A
+            - Sub page name (Str)
+        Returns:
+            - HTML content (str)
         """
+        ### Transfered from pages.py ###
+        bucket = self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")        
+        data = self.make_popularity_list()
+        string = ""
+
+        for index, pairs in enumerate(data):
+            if pairs[0] == page_name:
+                pairs[1] += 1
+
+        string = ""
+        for index in data:
+            string = string + index[0] + "," + str(index[1]) + "\r\n"
+        
+        blob.upload_from_string(string)
+
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown.markdown(md_content)
 
         return html_content
+    
+    def modify_page_analytics(self):
+        """This check if a subpage analytics doesnt exist inside in the csv 
+        and defult the ammount of times that the page was viewed to 0\n
+        Args:
+            - None
+        Returns:
+            - str (Only used in testing)
+        """
+        all_pages = self.get_all_page_names()
+        bucket = self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")
+        csv_list = self.make_popularity_list()
+        names = []
+        string = ""
+        for x in csv_list:
+            string = string+x[0] + "," + str(x[1]) + "\r\n"
+            names.append(x[0])
+
+        for sub_page in all_pages:
+            if sub_page not in names:
+                names.append(sub_page)
+                string = string + sub_page + "," + str(0) + "\r\n"
+            
+        blob.upload_from_string(string)
+            
+        csv_files = list(self.bucket_page_stats.list_blobs())
+        return string
 
     def get_comments(self):
         """
@@ -190,10 +349,10 @@ class Backend:
                 return False
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
-        
+
         elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
             blob = self.bucket_images.blob(os.path.basename(filename))
-        
+
         else:
             return False
 
@@ -271,7 +430,7 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
-        Checks if an md file has valid links to the site\n
+        Checks if a .md file has valid links to the site\n
         Args: 
             - Contents of a file (IO), the filename (Str)
         Returns: 
@@ -354,12 +513,18 @@ class Backend:
         user_pass = user_info['password']
         name = user_info['name']
 
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history = ["Account Began", timestamp]
+
+
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
 
-        user_blob.upload_from_string(f"{name}\n{hash_pass}")
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+        self.current_username = user_name
         return True, name
 
     def sign_in(self, user_check):
@@ -380,6 +545,22 @@ class Backend:
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
+        
+        if len(content) == 2:
+            content.append("")
+
+        raw_log = content[2]
+        raw_log = raw_log.replace('[', '')
+        raw_log = raw_log.replace(']', '')
+        raw_log = raw_log.replace('\'', '')
+        raw_log = raw_log.split(', ')
+
+        history = raw_log
+        
+        now = datetime.now()
+        timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
+        history.append("Logged In")
+        history.append(timestamp)
 
         user_pass = user_check['password']
         mixed = f'{user_pass}hi{user_name}'
@@ -388,4 +569,10 @@ class Backend:
         if not bcrypt.checkpw(encoded, hash_pass):
             return False, ''
 
+        user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
+        self.current_username = user_name
+
         return True, name
+
+    def get_log(self):
+        pass

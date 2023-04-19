@@ -2,6 +2,7 @@ from flaskr import pages
 from flask import Flask
 from flaskr.backend import Backend
 import logging
+from flaskr.backend import Backend
 logging.basicConfig(level=logging.DEBUG)
 
 

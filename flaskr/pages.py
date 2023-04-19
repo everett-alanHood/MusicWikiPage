@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 from google.cloud import storage
@@ -5,7 +6,7 @@ import os
 import uuid
 import zipfile
 from flaskext.markdown import Markdown
-
+import csv
 
 def make_endpoints(app, backend):
     """Connects the frontend with the established routes and the backend.
@@ -21,6 +22,8 @@ def make_endpoints(app, backend):
     login_manager.session_protection = 'strong'
     Markdown(app)
     Back_end = backend(app)
+
+
 
     class User(UserMixin):
         """User Class that is used by the Login Manager and browser.
@@ -73,17 +76,29 @@ def make_endpoints(app, backend):
 
         GET: Home page
         """
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Home")
         return render_template("main.html")
 
-    @app.route('/pages')
+    @app.route('/pages', methods=['GET','POST'])
     def pages():
-        """Calls the Backend to look up all existing pages in the GCS bucket corresponding to the Markdown files,
-        it then gets all the names and sends the user to a page where all available pages are shown as hyperlinks.
-
-        GET: Gets page names from the Backend and sends the user to a page showing all of them as a list of hyperlinks.
-        """
+        """Description: Have two hyperlink that give the sorting method that the hyperlink for 
+                  subpages will display \n
+        Args:
+            - None
+        Return:
+            - returns flask function consisting of pages.html, string and list of 
+              page names"""
         page_names = Back_end.get_all_page_names()
-        return render_template('pages.html', page_names=page_names)
+        sort="Alphabetical"
+
+        if request.args.get("sort_by")=="Popularity":
+            sort="Popularity"
+            page_names=Back_end.page_sort_by_popularity()
+            #get list of page names by Popularity
+        # default list is equal to Alphabetically
+        return render_template('pages.html', sort=sort, page_names=page_names)
+        
 
     @app.route('/pages/<sub_page>')
     def pages_next(sub_page):
@@ -92,9 +107,17 @@ def make_endpoints(app, backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
-        html_content = Back_end.get_wiki_page(sub_page)
-        # TODO: replace with single template instead of the dynamic {sub_page}.html
-        return render_template(f'{sub_page}.html', content=html_content)
+        if Back_end.current_username != "":
+            sub_page_cap=sub_page.capitalize()
+            Back_end.add_to_history(sub_page_cap)
+            
+        html_content = Back_end.get_wiki_page(sub_page)    
+        return render_template(f'sub_pages.html', content=html_content)
+
+    #@app.route('/pages', methods=['GET'])
+    #def dropdown():
+        #sort_by=["Alphabetically","Popularlity"]
+        #return render_template("pages.html",sort_by=sort_by)
 
     @app.route('/about')
     def about():
@@ -102,6 +125,8 @@ def make_endpoints(app, backend):
 
         GET: Calls Backend to get all Authors information and pictures, then sends the user to the about page that shows all the author's corresponding info.
         """
+        if Back_end.current_username != "":
+            Back_end.add_to_history("About")
         authors = Back_end.get_about()
         return render_template('about.html', authors=authors)
 
@@ -154,6 +179,8 @@ def make_endpoints(app, backend):
 
         GET: Log out and redirects user to initial page
         """
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Logged Out")
         logout_user()
         return redirect('/')
 
@@ -166,7 +193,10 @@ def make_endpoints(app, backend):
         GET: Upload Page
         POST: Takes the file passed as an input in the form and sents it to the Backend, redirects the user to the Home page.
         """
+
         #TODO A user can overwrite a pre-existing file, some check should to be created when uploading
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Upload")
         if request.method == 'POST':
             uploaded_file = request.files['upload']
             filename = os.path.basename(uploaded_file.filename)
@@ -270,6 +300,8 @@ def make_endpoints(app, backend):
 
         GET: Calls Backend and fetch images, sends user to the Images page where are images are displayed.
         """
+        if Back_end.current_username != "":
+            Back_end.add_to_history("Images")
         image_lst = Back_end.get_image()
         return render_template('images.html', image_lst=image_lst)
 
@@ -283,6 +315,10 @@ def make_endpoints(app, backend):
         flash('Incorrect method used, try again')
         return redirect(url_for('home')), 405
 
+    @app.route('/log')
+    def log():
+        return render_template('log.html')
+
     """
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -294,3 +330,14 @@ def make_endpoints(app, backend):
         {% endif %}
     {% endwith %}
     """
+
+    @app.route('/history', methods=['GET', 'POST'])
+    def history():
+        '''This takes the user's history and sendss it to the frontend page history.html to display the user's history.
+        Personal preference, but the code below isn't necessary since the user doesn't need to know they're viewing their history.'''
+        # if Back_end.current_username is not "":
+        #     Back_end.add_to_history("History")
+        history_summary = Back_end.get_history()
+        history_summary.reverse()
+        user_name = Back_end.current_username        
+        return render_template('history.html', history_summary = history_summary, user_name = user_name)
