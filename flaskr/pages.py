@@ -1,7 +1,6 @@
 
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
-from flaskr.backend import Backend
 from google.cloud import storage
 import os
 import uuid
@@ -9,7 +8,7 @@ import zipfile
 from flaskext.markdown import Markdown
 import csv
 
-def make_endpoints(app, Backend=Backend):
+def make_endpoints(app, Backend):
     """Connects the frontend with the established routes and the backend.
 
     Attributes:
@@ -46,7 +45,7 @@ def make_endpoints(app, Backend=Backend):
             self.id = f'{uuid.uuid4()}'
 
         def get_id(self):
-            return self.id
+            return self.name
 
         def is_authenticated(self):
             return True
@@ -89,7 +88,7 @@ def make_endpoints(app, Backend=Backend):
               page names"""
         page_names = Back_end.get_all_page_names()
         sort="Alphabetical"
-        print(request.args.get("sort_by"))
+
         if request.args.get("sort_by")=="Popularity":
             sort="Popularity"
             page_names=Back_end.page_sort_by_popularity()
@@ -164,7 +163,6 @@ def make_endpoints(app, Backend=Backend):
 
         user = load_user(data)
         login_user(user)
-
         return redirect(url_for('welcome'))
 
     @app.route('/logout')
@@ -199,7 +197,6 @@ def make_endpoints(app, Backend=Backend):
             print("FILENAME", filename)
             file_end = filename.split(".")[-1].lower()
             #case where the file is an image
-
             #if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
             if file_end == "jpeg" or file_end == "jpg" or file_end == "png" or file_end == "md":
                 uploadImage(uploaded_file, filename)
@@ -217,10 +214,37 @@ def make_endpoints(app, Backend=Backend):
                             print("FILENAME\nrfeionffoij", zipped_image)
                 return redirect(url_for("home"))
             else:
-                render_template('upload.html', error='Incorrect File Type')
-
+                return render_template('upload.html',
+                                       error='Incorrect File Type')
         return render_template('upload.html')
 
+    @app.route('/comments', methods=['GET', 'POST'])
+    @login_required
+    def comments_page():
+        """Displays all fetched Google Cloud Bucket blobs from the comments bucket as comments with the username, time of posting and content being displayed. 
+        When a POST request is received it takes the information passed in the
+        form and creates a blob containing it that is uploaded to the Google Cloud Storage comments bucket. 
+
+        GET: Comments page with input form for users to upload their own content.
+        POST: Takes the message passed as an input in the form and sents it to the Backend, refreshes the page to display newly created comments.
+        """
+        comment_list = Back_end.get_comments()
+        if request.method == 'POST':
+            message = request.form.get("comment")
+            author = request.form.get("hidden")
+            if not message:
+                return render_template('comments.html',
+                                       comment_list=comment_list , error='Comment content is empty. Invalid Comment. Please fill out the form.')
+            if len(message) > 500:
+                return render_template('comments.html',
+                                       comment_list=comment_list , error='Comment is too long, limit your message to 500 characters.')
+            uploaded = Back_end.upload_comment(author, message)
+            if uploaded:
+                print("File was uploaded Succesfully")
+            comment_list = Back_end.get_comments()
+        return render_template('comments.html', comment_list=comment_list)
+
+    # TODO Get rid of this, and just replace with Back_end.upload
     def uploadImage(f, filename):
         """Calls upon the Backend object upload method, passing a IO object
         and a String representing the file and its filename respectively.
@@ -263,7 +287,6 @@ def make_endpoints(app, Backend=Backend):
 
         user = load_user(data)
         login_user(user)
-
         return redirect(url_for('welcome'))
 
     @app.route('/images', methods=['GET', 'POST'])
@@ -284,7 +307,7 @@ def make_endpoints(app, Backend=Backend):
             error: Error number representing the type of error the user got.
         """
         flash('Incorrect method used, try again')
-        return redirect(url_for('/')), 405
+        return redirect(url_for('home')), 405
 
     """
     {% with messages = get_flashed_messages() %}

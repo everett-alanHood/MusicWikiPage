@@ -12,12 +12,13 @@ import re
 # for csv methods
 import csv
 from collections import deque
+
+import time
 from datetime import datetime
 """
+Explanation
 Args:
-Explain:
 Returns:
-Raises:
 """
 
 
@@ -25,7 +26,6 @@ class Backend:
     """
     Explain
 
-    
     Attributes:
         bucket_content: 
         bucket_users: 
@@ -52,6 +52,7 @@ class Backend:
         self.bucket_images = storage_client.bucket('minorbugs_images')
         self.bucket_page_stats = storage_client.bucket('minorbugs_page_analytics')
         self.bucket_users.bucket_history = storage_client.bucket('user_history')        
+        self.bucket_messages = storage_client.bucket('minorbugs_comments')
         #page urls
         self.pages = {
             '/', 'pages', 'about', 'welcome', 'login', 'logout', 'upload',
@@ -67,8 +68,7 @@ class Backend:
     def get_history(self):
         user_blob = self.bucket_users.blob(f'{self.current_username}')
         content = user_blob.download_as_string().decode('utf-8').split('\n')[2]
-        print(content)
-        print("content\ngetHistory\n\n")
+
         content = content.replace('\'', '')
         return content.strip('][\'').split(', ')
     
@@ -93,7 +93,7 @@ class Backend:
         history.append(timestamp)
 
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
-    
+
     def get_all_page_names(self):
         """
         Args: 
@@ -105,7 +105,7 @@ class Backend:
         """
         all_blobs = list(self.bucket_content.list_blobs())
         #Could add a feature where users upload their own content??
-
+        
         page_names = []
         blocklist=["test_model","TestMeet","test_url"]
         for blob in all_blobs:
@@ -118,11 +118,13 @@ class Backend:
         
     def make_popularity_list(self):
         """
-        Explain: Make a lists of lists from a bucket called minorbugs_page_analytics \n
+        Creates matrix of page names and 
+        number times each page was visited.
         Args:
             - None
-        Return: 
-            -p_list (2d list )"""
+        Returns:
+            - Matrix made of str and int 
+        """
         bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")
         downloaded_file = blob.download_as_text(encoding="utf-8")
@@ -143,10 +145,8 @@ class Backend:
         
         for index , pairs in enumerate (data):
             temp.append(pairs)            
-            print(str(index))
             
             if index%2 == 1:
-                print(str(temp))
                 temp[1] = int(temp[1])
                 
                 true_data.append(temp.copy())
@@ -155,9 +155,18 @@ class Backend:
         return true_data
         
     def page_sort_by_popularity(self):
+        """
+        Gets the list of the pages and how often they've been looked at unorganized
+        organizes them by popularity greatest to least \n
+        Args: 
+            N/A
+        Returns:
+            list of pages(str) without number ranking (list)
+        """
         self.modify_page_analytics()
-        p_list = self.make_popularity_list()
-        
+        p_list=self.make_popularity_list()
+
+
         
         for next_pop in range(0, len(p_list)-1, 1):
             highest = p_list[next_pop][1]
@@ -172,38 +181,46 @@ class Backend:
             p_list[page] = p_list[page][0]
         
         return p_list
+        
     def get_wiki_page(self, page_name):
         """
-        Args: A page name (Str)
-        Explain: Converts a specific markdown file to html, 
-                 adds the header, and stores that in local files.
-        Returns: N/A
+        Increments popularity value of sub page
+        and converts a markdown file to HTML.\n       
+        Args: 
+            - Sub page name (Str)
+        Returns:
+            - HTML content (str)
         """
+        ### Transfered from pages.py ###
+        bucket = self.bucket_page_stats
+        blob = bucket.get_blob("Dictionary by Popularity.csv")        
+        data = self.make_popularity_list()
+        string = ""
+
+        for index, pairs in enumerate(data):
+            if pairs[0] == page_name:
+                pairs[1] += 1
+
+        string = ""
+        for index in data:
+            string = string + index[0] + "," + str(index[1]) + "\r\n"
+        
+        blob.upload_from_string(string)
+
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         html_content = markdown.markdown(md_content)
 
-        bucket=self.bucket_page_stats
-        blob = bucket.get_blob("Dictionary by Popularity.csv")        
-        data=self.make_popularity_list()
-        string=""
-        for index , pairs in enumerate (data):
-            if pairs[0]==page_name:
-                pairs[1]+=1
-        print(str(data))          
-        string=""
-        for index in data:
-            string=string+index[0]+","+str(index[1])+"\r\n"
-        
-        blob.upload_from_string(string)
         return html_content
     
     def modify_page_analytics(self):
-        """Explain: Modify the csv file to have new entries if it not in Dictionary by Popularity.csv \n
-        Args: 
-            -None
-        Return:
-            - String """
+        """This check if a subpage analytics doesnt exist inside in the csv 
+        and defult the ammount of times that the page was viewed to 0\n
+        Args:
+            - None
+        Returns:
+            - str (Only used in testing)
+        """
         all_pages = self.get_all_page_names()
         bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")
@@ -213,6 +230,7 @@ class Backend:
         for x in csv_list:
             string = string+x[0] + "," + str(x[1]) + "\r\n"
             names.append(x[0])
+
         for sub_page in all_pages:
             if sub_page not in names:
                 names.append(sub_page)
@@ -221,18 +239,60 @@ class Backend:
         blob.upload_from_string(string)
             
         csv_files = list(self.bucket_page_stats.list_blobs())
-        print(str(csv_files))
-        return csv_files
+        return string
+
+    def get_comments(self):
+        """
+        Args: self
+        Explain: Gets all the comments stored in the Google Cloud buckets and returns
+        them as a list of dictionaries containing all the comment info.
+        Returns: List of dictionaries representing the comments.
+        """
+        blobs = list(self.bucket_messages.list_blobs())
+        comments_lst = []
+        for blob in blobs:
+            metadata = blob.name.split(":")
+            timestamp = str(datetime.fromtimestamp(float(metadata[0])))[0:-10]
+            user = metadata[1]
+            comments_dict = {
+                "user": user,
+                "time": timestamp,
+                "content": blob.download_as_string().decode('utf-8')
+            }
+            comments_lst.append(comments_dict)
+        return comments_lst
+
+    def upload_comment(self, username, content):
+        """
+        Args:
+        username: String representation of the logged in username.
+        content: String representation of the comment typed out by the user in the comment text input.
+        Explain: Receives a username and the comment content and formats the blob name as timestamp:username and then the contents of that blob
+        is the message. It is then uploaded to the Google Cloud Buckets and then served with all the other comments.
+        Returns: 
+        Boolean representing if the upload was successful or not.
+        """
+        if not content:
+            return False
+        timestamp = str(time.time())
+        filename = timestamp + ":" + username
+        message_blob = self.bucket_messages.blob(filename)
+        if message_blob.exists():
+            return False
+        message_blob.upload_from_string(content)
+        return True
 
     def upload(self, content, filename):
         """
-        Args: Contents of a file (IO), the filename (Str)
-        Explain: Uploads a .md, .jpg, .jpeg or .png,
-                 to a google cloud bucket (Content or Images)
-        Returns: (Boolean)
+        Uploads a .md, .jpg, .jpeg or .png,
+        to a google cloud bucket (Content or Images)\n
+        Args: 
+            - Contents of a file (IO), the filename (Str)
+        Returns: 
+            - (Boolean)
         """
         file_end = filename.split(".")[-1].lower()
-        #if filename.endswith('.md'):
+
         if file_end == "md":
             if not self.url_check(content, filename):
                 return False
@@ -240,8 +300,8 @@ class Backend:
             blob = self.bucket_content.blob(os.path.basename(filename))
 
         elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
-            #elif filename.endswith(".jpg") or filename.endswith(".jpeg") or filename.endswith(".png"):
             blob = self.bucket_images.blob(os.path.basename(filename))
+
         else:
             return False
 
@@ -250,9 +310,11 @@ class Backend:
 
     def url_check(self, file_content, filename):
         """
-        Args: Contents of a file (IO), the filename (Str)
-        Explain: Checks if a .md file has valid links to the site
-        Returns: (Boolean)
+        Checks if a .md file has valid links to the site\n
+        Args: 
+            - Contents of a file (IO), the filename (Str)
+        Returns: 
+            - (Boolean)
         """
         content = str(file_content.read())
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
