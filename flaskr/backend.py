@@ -124,7 +124,6 @@ class Backend:
             - N/A
         """
         md_blob = self.bucket_content.blob(f'{page_name}.md')
-
         md_content = md_blob.download_as_string().decode('utf-8')
         main = markdown.markdown(md_content)
     
@@ -135,7 +134,9 @@ class Backend:
             summary = markdown.markdown(md_content)
         else:
             summary=None
-        return main,summary
+        tuple=(main,summary)
+        print(str(tuple))
+        return tuple
 
     def upload(self, content, filename):
         """
@@ -279,6 +280,7 @@ class Backend:
                 continue
 
         images_lst.sort()
+        print(str(images_lst))
         return images_lst
 
     def sign_up(self, user_info):
