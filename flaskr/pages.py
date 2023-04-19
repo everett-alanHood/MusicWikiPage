@@ -23,8 +23,6 @@ def make_endpoints(app, backend):
     Markdown(app)
     Back_end = backend(app)
 
-
-
     class User(UserMixin):
         """User Class that is used by the Login Manager and browser.
 
@@ -110,7 +108,7 @@ def make_endpoints(app, backend):
         if Back_end.current_username != "":
             sub_page_cap=sub_page.capitalize()
             Back_end.add_to_history(sub_page_cap)
-            
+
         return render_template(f'sub_pages.html', content=main,summary=summary)
 
     @app.route('/about')

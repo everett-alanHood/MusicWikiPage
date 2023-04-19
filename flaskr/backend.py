@@ -193,7 +193,7 @@ class Backend:
         data = []
         string = ""
 
-        # 
+        # Creates string for each stat
         for index, character in enumerate(page_data_list):
             if (character == "," or character == "\r" or character == page_data_list[-1] ) and character != "\n":
                 if character == page_data_list[-1]:
@@ -206,7 +206,8 @@ class Backend:
         temp = []
         true_data = []
         
-        for index, pairs in enumerate (data):
+        # Converts data popularity stat to int
+        for index, pairs in enumerate(data):
             temp.append(pairs)            
             
             if index % 2 == 1:
@@ -226,10 +227,9 @@ class Backend:
             list of pages(str) without number ranking (list)
         """
         self.modify_page_analytics()
-        p_list=self.make_popularity_list()
+        p_list = self.make_popularity_list()
 
-
-        
+        # Sorts p_list data
         for next_pop in range(0, len(p_list)-1, 1):
             highest = p_list[next_pop][1]
             h_index = next_pop
@@ -239,6 +239,7 @@ class Backend:
                     h_index = find_highest
             p_list[next_pop], p_list[h_index] = p_list[h_index], p_list[next_pop]
         
+        # Gets name of page
         for page in range(len(p_list)):
             p_list[page] = p_list[page][0]
         
@@ -256,22 +257,26 @@ class Backend:
         bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")        
         data = self.make_popularity_list()
-        string = ""
 
+        # Adds to sub-page popularity
         for index, pairs in enumerate(data):
             if pairs[0] == page_name:
                 pairs[1] += 1
 
+        # Converts data to string
         string = ""
         for index in data:
             string = string + index[0] + "," + str(index[1]) + "\r\n"
         
+        # Uplods modified string 
         blob.upload_from_string(string)
 
+        # Convert sub-page content to markdown
         md_blob = self.bucket_content.blob(f'{page_name}.md')
         md_content = md_blob.download_as_string().decode('utf-8')
         main = markdown.markdown(md_content)
 
+        # Checks if summary for sub-page exists, if so, converts to markdown
         md_blob = self.bucket_summary.blob(f'{page_name}.md')
         if md_blob.exists():   
             md_content = md_blob.download_as_string().decode('utf-8')
@@ -282,7 +287,8 @@ class Backend:
         return (main, summary)
     
     def modify_page_analytics(self):
-        """This check if a subpage analytics doesnt exist inside in the csv 
+        """
+        Check if subpage analytics doesnt exist inside in the csv 
         and defult the ammount of times that the page was viewed to 0\n
         Args:
             - None
@@ -295,28 +301,34 @@ class Backend:
         csv_list = self.make_popularity_list()
         names = []
         string = ""
+        
+        # csv_list to string
         for x in csv_list:
-            string = string+x[0] + "," + str(x[1]) + "\r\n"
+            string = string + x[0] + "," + str(x[1]) + "\r\n"
             names.append(x[0])
 
+        # Defaults new pages to 0 and adds to string
         for sub_page in all_pages:
             if sub_page not in names:
                 names.append(sub_page)
                 string = string + sub_page + "," + str(0) + "\r\n"
             
         blob.upload_from_string(string)
-
         return string
 
     def get_comments(self):
         """
-        Args: self
-        Explain: Gets all the comments stored in the Google Cloud buckets and returns
-        them as a list of dictionaries containing all the comment info.
-        Returns: List of dictionaries representing the comments.
+        Gets all the comments stored in the Google Cloud buckets and returns
+        them as a list of dictionaries containing all the comment info. \n
+        Args:
+            - N/A
+        Returns: 
+            - List of dictionaries representing the comments.
         """
         blobs = list(self.bucket_messages.list_blobs())
         comments_lst = []
+
+        # Gets comments data from all users
         for blob in blobs:
             metadata = blob.name.split(":")
             timestamp = str(datetime.fromtimestamp(float(metadata[0])))[0:-10]
@@ -327,6 +339,7 @@ class Backend:
                 "content": blob.download_as_string().decode('utf-8')
             }
             comments_lst.append(comments_dict)
+
         return comments_lst
 
     def upload_comment(self, username, content):
@@ -342,6 +355,7 @@ class Backend:
         if not content:
             return False
 
+        # Gets current time
         timestamp = str(time.time())
         filename = timestamp + ":" + username
         message_blob = self.bucket_messages.blob(filename)
@@ -349,6 +363,7 @@ class Backend:
         if message_blob.exists():
             return False
 
+        # Uploads content to bucket
         message_blob.upload_from_string(content)
         return True
 
@@ -364,18 +379,20 @@ class Backend:
         file_end = filename.split(".")[-1].lower()
 
         if file_end == "md":
+            # Checks for any invalid links
             if not self.url_check(content, filename):
                 return False
             content.seek(0)
             blob = self.bucket_content.blob(os.path.basename(filename))
-
-        elif file_end == "jpeg" or file_end == "jpg" or file_end == "png":
+        elif file_end in {"jpeg", "jpg", "png"}:
             blob = self.bucket_images.blob(os.path.basename(filename))
-
         else:
             return False
 
+        # Uploads data to cloud
         blob.upload_from_file(content)
+
+        # If md file, upload summary
         if file_end == "md":
             self.upload_summary(filename)
         
@@ -457,7 +474,8 @@ class Backend:
         """
         content = str(file_content.read())
         check_urls = re.findall(r'\[(.*?)\]\((.*?)\)', content)
-
+        
+        # Checks for invalid links in md file
         for url in check_urls:
             if url[1][1:] in self.all_pages:
                 pass
@@ -480,6 +498,7 @@ class Backend:
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
 
+        # Adds all images to images_lst (Except authors)
         for blob in blobs:
             if blob.name.startswith("[Author]"):
                 continue
@@ -501,6 +520,7 @@ class Backend:
         blobs = list(self.bucket_images.list_blobs())
         images_lst = []
 
+        # Gets all author images from GCS images
         for blob in blobs:
             if blob.name.startswith("[Author]"):
                 blob_img = blob.public_url
@@ -524,23 +544,29 @@ class Backend:
         user_name = user_info['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
 
+        # Checks if user exists
         if user_blob.exists():
             return False, ''
 
+        # Gets name & password
         user_pass = user_info['password']
         name = user_info['name']
 
+        # Gets timestap for new account
         now = datetime.now()
         timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
         history = ["Account Began", timestamp]
-
+        
+        # Encrypts password
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
         salt = bcrypt.gensalt()
         hash_pass = bcrypt.hashpw(encoded, salt)
 
+        # Uploads users data
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
         self.current_username = user_name
+
         return True, name
 
     def sign_in(self, user_check):
@@ -555,9 +581,11 @@ class Backend:
         user_name = user_check['username'].lower()
         user_blob = self.bucket_users.blob(f'{user_name}')
 
+        # Check if user doesnt exist
         if not user_blob.exists():
             return False, ''
 
+        # Gets users data (username & password)
         content = user_blob.download_as_string().decode('utf-8').split('\n')
         name = content[0]
         hash_pass = content[1][2:-1].encode('utf-8')
@@ -565,6 +593,7 @@ class Backend:
         if len(content) == 2:
             content.append("")
 
+        # Cleans log content
         raw_log = content[2]
         raw_log = raw_log.replace('[', '')
         raw_log = raw_log.replace(']', '')
@@ -573,18 +602,22 @@ class Backend:
 
         history = raw_log
         
+        # Captures current time
         now = datetime.now()
         timestamp = now.strftime("%b-%d-%Y %H:%M:%S")
         history.append("Logged In")
         history.append(timestamp)
 
+        # Encrypts pass just passed in
         user_pass = user_check['password']
         mixed = f'{user_pass}hi{user_name}'
         encoded = base64.b64encode(hashlib.sha256(mixed.encode()).digest())
 
+        # Checks if encrypted password matches one on records
         if not bcrypt.checkpw(encoded, hash_pass):
             return False, ''
 
+        # Uploads users data
         user_blob.upload_from_string(f"{name}\n{hash_pass}\n{history}")
         self.current_username = user_name
 
