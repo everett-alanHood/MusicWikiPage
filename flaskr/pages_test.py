@@ -118,9 +118,6 @@ def test_auth_login_success(mock_uuid, client, mock_backend):
     assert resp.status_code == 200
     assert b"Welcome Test Name" in resp.data
 
-# def test_upload_success(client):
-#     resp = client.get("/upload")
-#     assert resp.status_code == 200  #This check that the connection to upload is good
 
 def test_auth_login_fail(client, mock_backend):
     mock_backend.sign_in.return_value = (False, "Test Name")
@@ -184,17 +181,10 @@ def test_signup_success(mock_uuid, login_client, mock_backend):
     assert resp.status_code == 200
     assert b"Welcome Test Name" in resp.data
 
-# def test_pages_next(client):
-#     resp = client.get("/pages/chord")
-#     assert resp.status_code == 200  #This check that the connection to a sub pages is good
-#     assert b"Chord" in resp.data
-
-# def test_get_welcome(client):
-#     resp = client.get("/welcome")
-#     user_check = {"username": "username", "password": "password"}
-#     #sign in user to use welcome
-#     assert resp.status_code == 401  #This check that the connection to welcome is good
-#     assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
+def test_get_welcome(client, mock_backend):
+    resp = client.get("/welcome")
+    assert resp.status_code == 200  #This check that the connection to welcome is good
+    assert b"Welcome" in resp.data  #This check if the cilent can grabs the data within welcome
 
 # user vincent username is username and password is password
 
