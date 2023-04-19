@@ -42,7 +42,6 @@ def make_endpoints(app, Backend):
             Args:
                 name: String representation of the user's name
             """
-            #TODO Doesnt display full name, but instead the id, fixit
             self.name = f'{name}'
             self.id = f'{uuid.uuid4()}'
 
@@ -205,7 +204,7 @@ def make_endpoints(app, Backend):
             #case where the file is an image
             #if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png') or filename.endswith('.md'):
             if file_end == "jpeg" or file_end == "jpg" or file_end == "png" or file_end == "md":
-                uploadImage(uploaded_file, filename)
+                Back_end.upload(uploaded_file, filename)
                 return redirect(url_for("home"))
             #case where the file is a zip
             elif filename.endswith('.zip'):
@@ -216,7 +215,7 @@ def make_endpoints(app, Backend):
                         if zipped_image.endswith(
                                 '.jpg') or zipped_image.endswith(
                                     '.jpeg') or zipped_image.endswith('.png'):
-                            uploadImage(z.open(zipped_image), zipped_image)
+                            Back_end.upload(z.open(zipped_image), zipped_image)
                             print("FILENAME\nrfeionffoij", zipped_image)
                 return redirect(url_for("home"))
             else:
@@ -249,21 +248,6 @@ def make_endpoints(app, Backend):
                 print("File was uploaded Succesfully")
             comment_list = Back_end.get_comments()
         return render_template('comments.html', comment_list=comment_list)
-
-    # TODO Get rid of this, and just replace with Back_end.upload
-    def uploadImage(f, filename):
-        """Calls upon the Backend object upload method, passing a IO object
-        and a String representing the file and its filename respectively.
-
-        Args:
-            f: IO object that is the content to be uploaded.
-            filename: String representation of the passed file name
-
-        Returns:
-            Boolean representing if the upload was successful or not.
-
-        """
-        return Back_end.upload(f, filename)
 
     @app.route('/signup', methods=['GET'])
     def get_signup():
