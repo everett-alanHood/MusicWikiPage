@@ -129,26 +129,25 @@ class Backend:
         blob = bucket.get_blob("Dictionary by Popularity.csv")
         downloaded_file = blob.download_as_text(encoding="utf-8")
         page_data_list = list(downloaded_file)
-
-        data=[]
-        string=""
+        data = []
+        string = ""
         for index ,character in enumerate(page_data_list):
-            if (character == "," or character == "\r" or character==page_data_list[-1] )and character != "\n":
-                if character==page_data_list[-1]:
-                    string=string+character
+            if (character == "," or character == "\r" or character == page_data_list[-1] ) and character != "\n":
+                print(str(page_data_list[-1]))
+                if character == page_data_list[-1]:
+                    string = string + character
                 data.append(string)
-                string=""
+                string = ""
             elif character != "\n" and character != "\r":
-                string=string+character
-
-        temp=[]
-        true_data=[]
+                string = string+character
+        temp = []
+        true_data = []
         
         for index , pairs in enumerate (data):
             temp.append(pairs)            
             
-            if index%2==1:
-                temp[1]=int(temp[1])
+            if index%2 == 1:
+                temp[1] = int(temp[1])
                 
                 true_data.append(temp.copy())
                 temp.clear()
@@ -226,19 +225,20 @@ class Backend:
         bucket = self.bucket_page_stats
         blob = bucket.get_blob("Dictionary by Popularity.csv")
         csv_list = self.make_popularity_list()
-        
-        names=[]
-        string=""
+        names = []
+        string = ""
         for x in csv_list:
-            string=string+x[0]+","+str(x[1])+"\r\n"
+            string = string+x[0] + "," + str(x[1]) + "\r\n"
             names.append(x[0])
 
         for sub_page in all_pages:
             if sub_page not in names:
                 names.append(sub_page)
-                string=string+sub_page+","+str(0)+"\r\n"
+                string = string + sub_page + "," + str(0) + "\r\n"
             
         blob.upload_from_string(string)
+            
+        csv_files = list(self.bucket_page_stats.list_blobs())
         return string
 
     def get_comments(self):
