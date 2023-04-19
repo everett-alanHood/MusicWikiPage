@@ -65,7 +65,7 @@ def test_pages_next(client, mock_backend):
     mock_backend.get_wiki_page.return_value = test_data
     
     resp = client.get("/pages/sub_pages")
-
+    print(resp.data)
     assert resp.status_code == 200
     assert b'Test Content' in resp.data
     assert b'Test Summary' in resp.data
