@@ -60,16 +60,16 @@ def test_pages(client, mock_backend):
     assert b"<a href=\"/pages/test_page0\">test_page0</a>" in resp.data
     assert b"<a href=\"/pages/test_page1\">test_page1</a>" in resp.data
 
-
 @patch("flaskr.pages.render_template")
 def test_pages_next(mock_render, client, mock_backend):
-    mock_backend.get_wiki_page.return_value = "Test Content"
-    mock_render.return_value = "Test Content"
+    test_data = ("Test Content", "Test Summary")
+    mock_backend.get_wiki_page.return_value = test_data
+    mock_render.return_value = 'Test Content'
 
     resp = client.get("/pages/sub_pages")
 
-    mock_render.assert_called_once_with("sub_pages.html", content="Test Content")
-    print(resp.data)
+    mock_render.assert_called_once_with("sub_pages.html", content=test_data[0], summary=test_data[1])
+
     assert resp.status_code == 200
     assert b"Test Content" == resp.data
 
@@ -169,6 +169,30 @@ def test_get_about(client):
     resp = client.get("/about")
     assert resp.status_code == 200  #This check that the connection to about is good
     assert b"Your Authors" in resp.data  #This check if the cilent can grabs the data within about
+
+def test_get_page_summary(client, mock_backend):
+    mock_backend.get_wiki_page.return_value=("Chord is a group of notes","a group of notes")
+    resp = client.get("/pages/sub_pages")
+    assert resp.status_code == 200  #This check that the connection to about is good
+    assert b"a group of notes" in resp.data
+
+def test_get_page_summary_None(client, mock_backend):
+    test_main = "Chord is a group of notes"
+    main_len=len(test_main)
+    mock_backend.get_wiki_page.return_value=("Chord is a group of notes",None)
+    resp = client.get("/pages/sub_pages")
+    str_resp = resp.data.decode("utf-8")[:-main_len]
+     
+    assert resp.status_code == 200  #This check that the connection to about is good
+    assert "Chord" not in str_resp
+    assert "Chord is a group of notes" not in str_resp
+
+# def test_pages(client):
+#     resp = client.get("/pages")
+#     assert resp.status_code == 200  #This check that the connection to pages is good
+#     assert b"All Pages" in resp.data
+#     assert b"Sub-Pages" in resp.data
+
 
 @patch("uuid.uuid4")
 def test_signup_success(mock_uuid, login_client, mock_backend):

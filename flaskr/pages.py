@@ -107,17 +107,12 @@ def make_endpoints(app, backend):
 
         GET: Gets the corresponding MD file from the Backend, sends the user to a new page that displays the MD as HTML.
         """
+        main,summary = Back_end.get_wiki_page(sub_page)
         if Back_end.current_username != "":
             sub_page_cap=sub_page.capitalize()
             Back_end.add_to_history(sub_page_cap)
-            
-        html_content = Back_end.get_wiki_page(sub_page)    
-        return render_template(f'sub_pages.html', content=html_content)
-
-    #@app.route('/pages', methods=['GET'])
-    #def dropdown():
-        #sort_by=["Alphabetically","Popularlity"]
-        #return render_template("pages.html",sort_by=sort_by)
+        
+        return render_template(f'sub_pages.html', content=main,summary=summary)
 
     @app.route('/about')
     def about():
