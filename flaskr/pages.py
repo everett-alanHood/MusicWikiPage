@@ -6,7 +6,6 @@ import os
 import uuid
 import zipfile
 from flaskext.markdown import Markdown
-import csv
 
 def make_endpoints(app, backend):
     """Connects the frontend with the established routes and the backend.
