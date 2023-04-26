@@ -233,6 +233,7 @@ def make_endpoints(app, Backend):
         GET: Comments page with input form for users to upload their own content.
         POST: Takes the message passed as an input in the form and sents it to the Backend, refreshes the page to display newly created comments.
         """
+        Back_end.add_to_history("Comments")
         comment_list = Back_end.get_comments()
         if request.method == 'POST':
             message = request.form.get("comment")
